@@ -371,3 +371,10 @@ APP_TITLE       = "VFB Current-State Pain Heat Map"
 APP_SUBTITLE    = "CRM Transformation · Sprint 1 & 2 · Data Engineer View"
 APP_CLIENT      = "Virginia Farm Bureau"
 EMMA_LABEL      = "Emma"   # your name — appears in the YOU badge and data gap column
+
+# ── KEY OBSERVATIONS ──────────────────────────────────────────────────────────
+# Edit these from the dashboard (Edit Mode → click ✏️ next to any observation)
+# or directly here. Add or remove items freely — the list updates automatically.
+OBSERVATIONS = [
+    "Example observations here",
+]

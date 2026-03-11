@@ -10,10 +10,10 @@ import re
 import os
 from data import (
     STAGES, PERSONAS, HEAT_COLORS,
-    APP_TITLE, APP_SUBTITLE, APP_CLIENT, EMMA_LABEL
+    APP_TITLE, APP_SUBTITLE, APP_CLIENT, EMMA_LABEL, OBSERVATIONS
 )
 
-DATA_FILE = os.path.join(os.path.dirname(__file__), "data.py")
+DATA_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__) or "."), "data.py")
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -558,24 +558,103 @@ else:
 
 # ── Key observations ──────────────────────────────────────────────────────────
 
+def save_observations(new_obs_list):
+    """Write updated OBSERVATIONS list back to data.py."""
+    with open(DATA_FILE, "r") as f:
+        src = f.read()
+    lines = ["OBSERVATIONS = ["]
+    for item in new_obs_list:
+        escaped = item.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append('    "' + escaped + '",')
+    lines.append("]")
+    new_block = "\n".join(lines)
+    src = re.sub(r"OBSERVATIONS\s*=\s*\[.*?\]", new_block, src, flags=re.DOTALL)
+    with open(DATA_FILE, "w") as f:
+        f.write(src)
+
 st.markdown("---")
-st.markdown(
-    f"<div class='obs-box'>"
-    f"<div style='font-size:11px;font-weight:800;color:#0D9488;"
-    f"text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>"
-    f"🎯 {EMMA_LABEL}'s Key Data Engineering Observations</div>"
-    f"<ul style='margin:0;padding-left:18px;font-size:12px;line-height:1.8;color:#1A1A1A;'>"
-    f"<li><strong>Join/Buy and Policy in Force</strong> are the hottest stages — "
-    f"the Finys ↔ Personify identity bridge gap is the root cause of both</li>"
-    f"<li><strong>Renewal/Expand</strong> is critical for Ray, Jason, and Bill — "
-    f"no event-driven pipeline exists out of Finys today</li>"
-    f"<li><strong>Bob's Service Event</strong> is the only critical cell in that column — "
-    f"claims data is completely dark to the relationship management side</li>"
-    f"<li><strong>Jenny's row</strong> is the technical debt layer — no Finys API means "
-    f"none of the high-pain items can be solved without her foundational work first</li>"
-    f"</ul></div>",
-    unsafe_allow_html=True
-)
+
+# Header row
+obs_col, obs_btn_col = st.columns([8, 1])
+with obs_col:
+    st.markdown(
+        f"<div style='font-size:11px;font-weight:800;color:#0D9488;"
+        f"text-transform:uppercase;letter-spacing:0.08em;'>"
+        f"🎯 {EMMA_LABEL}'s Key Data Engineering Observations</div>",
+        unsafe_allow_html=True
+    )
+
+editing_obs = st.session_state.get("editing_observations", False)
+
+if edit_mode and not editing_obs:
+    with obs_btn_col:
+        if st.button("✏️ Edit", key="obs_edit_btn"):
+            st.session_state["editing_observations"] = True
+            st.session_state["obs_draft"] = list(OBSERVATIONS)
+            st.rerun()
+
+if editing_obs and edit_mode:
+    # Edit mode — show text inputs for each observation + add/remove controls
+    st.markdown("<div style='background:white;border:2px solid #C8A84B;border-radius:12px;padding:18px 20px;margin-top:10px;'>", unsafe_allow_html=True)
+
+    draft = st.session_state.get("obs_draft", list(OBSERVATIONS))
+    new_draft = []
+
+    for idx, obs in enumerate(draft):
+        row_col, del_col = st.columns([10, 1])
+        with row_col:
+            updated = st.text_area(
+                f"Observation {idx + 1}",
+                value=obs,
+                height=80,
+                key=f"obs_text_{idx}",
+                label_visibility="collapsed"
+            )
+            new_draft.append(updated)
+        with del_col:
+            st.markdown("<div style='margin-top:4px;'>", unsafe_allow_html=True)
+            if st.button("🗑", key=f"obs_del_{idx}", help="Remove this observation"):
+                draft.pop(idx)
+                st.session_state["obs_draft"] = draft
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    st.session_state["obs_draft"] = new_draft
+
+    if st.button("➕ Add observation", key="obs_add"):
+        st.session_state["obs_draft"].append("")
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    save_col2, cancel_col2, _ = st.columns([1, 1, 5])
+    with save_col2:
+        if st.button("💾 Save observations", type="primary", use_container_width=True):
+            filtered = [o.strip() for o in new_draft if o.strip()]
+            try:
+                save_observations(filtered)
+                st.session_state["editing_observations"] = False
+                st.session_state.pop("obs_draft", None)
+                st.success("✅ Saved!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Save failed: {e}")
+    with cancel_col2:
+        if st.button("✕ Cancel", key="obs_cancel", use_container_width=True):
+            st.session_state["editing_observations"] = False
+            st.session_state.pop("obs_draft", None)
+            st.rerun()
+
+else:
+    # Read-only display
+    items_html = "".join(f"<li style='margin-bottom:6px;'>{obs}</li>" for obs in OBSERVATIONS)
+    st.markdown(
+        f"<div class='obs-box' style='margin-top:8px;'>"
+        f"<ul style='margin:0;padding-left:18px;font-size:12px;line-height:1.8;color:#1A1A1A;'>"
+        f"{items_html}"
+        f"</ul></div>",
+        unsafe_allow_html=True
+    )
 
 
 # ── Export ────────────────────────────────────────────────────────────────────
