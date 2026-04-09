@@ -1,6 +1,9 @@
 """
-VFB Pain Heat Map — Streamlit App
-==================================
+VFB System Pain Heat Map — Streamlit App
+=========================================
+X axis: Systems (with functional descriptions)
+Y axis: Teams / Personas
+
 Run locally:   streamlit run app.py
 """
 
@@ -10,14 +13,14 @@ import re
 import os
 from data import (
     STAGES, PERSONAS, HEAT_COLORS,
-    APP_TITLE, APP_SUBTITLE, APP_CLIENT, EMMA_LABEL, OBSERVATIONS
+    APP_TITLE, APP_SUBTITLE, APP_CLIENT, OBSERVATIONS
 )
 
 DATA_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__) or "."), "data.py")
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title=f"{APP_CLIENT} · Pain Heat Map",
+    page_title=f"{APP_CLIENT} · System Pain Heat Map",
     page_icon="🗺️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -65,6 +68,31 @@ st.markdown("""
         padding: 14px 18px;
     }
     .block-container { padding-top: 1rem; }
+    /* Tighter column headers for system labels */
+    .sys-header {
+        font-size: 10px;
+        font-weight: 700;
+        color: #1A5C38;
+        text-align: center;
+        padding: 4px 2px;
+        line-height: 1.3;
+    }
+    .sys-desc {
+        font-size: 8px;
+        color: #9CA3AF;
+        font-weight: 400;
+    }
+    .cell-0 + div button { background:#F8FAF8 !important; border:1.5px solid #D1D5DB !important; color:#9CA3AF !important; font-style:italic !important; }
+    .cell-1 + div button { background:#FEF9C3 !important; border:1.5px solid #FCD34D80 !important; color:#854D0E !important; }
+    .cell-2 + div button { background:#FED7AA !important; border:1.5px solid #FB923C80 !important; color:#9A3412 !important; }
+    .cell-3 + div button { background:#FECACA !important; border:1.5px solid #F8717180 !important; color:#7F1D1D !important; }
+    .cell-4 + div button { background:#FCA5A5 !important; border:1.5px solid #DC2626 !important; color:#450A0A !important; }
+    .cell-sel + div button { box-shadow:0 0 0 3px rgba(0,0,0,0.18) !important; border-width:2.5px !important; }
+    div[class^="cell-"] + div button, div[class*=" cell-"] + div button {
+        border-radius:8px !important; font-size:13px !important; font-weight:700 !important;
+        min-height:62px !important; padding:10px 6px !important; cursor:pointer !important; width:100% !important;
+    }
+    div[class^="cell-"] + div button:hover { filter:brightness(0.94) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -88,11 +116,9 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
-
         brace_depth += line.count("{") - line.count("}")
 
         if not in_target_persona:
-            # Detect entry into our target persona block
             if re.search(r'"id"\s*:\s*"' + re.escape(persona_id) + r'"', line):
                 in_target_persona = True
                 persona_entry_depth = brace_depth
@@ -100,7 +126,6 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
             i += 1
             continue
 
-        # Check if we've exited the persona block
         if persona_entry_depth is not None and brace_depth < persona_entry_depth:
             in_target_persona = False
             in_scores = False
@@ -111,14 +136,12 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
             i += 1
             continue
 
-        # Update status
         if re.match(r'\s*"status"\s*:', line):
             indent = len(line) - len(line.lstrip())
             new_lines.append(" " * indent + '"status": "' + new_status + '",\n')
             i += 1
             continue
 
-        # Enter scores block
         if re.match(r'\s*"scores"\s*:', line):
             in_scores = True
             in_notes = False
@@ -126,7 +149,6 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
             i += 1
             continue
 
-        # Inside scores — update target stage
         if in_scores:
             if re.match(r'\s*"' + re.escape(stage_id) + r'"\s*:', line):
                 indent = len(line) - len(line.lstrip())
@@ -136,7 +158,6 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
             if stripped in ("},", "}"):
                 in_scores = False
 
-        # Enter notes block
         if re.match(r'\s*"notes"\s*:', line):
             in_notes = True
             in_scores = False
@@ -144,7 +165,6 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
             i += 1
             continue
 
-        # Inside notes — find target stage note
         if in_notes and not in_target_note:
             if re.match(r'\s*"' + re.escape(stage_id) + r'"\s*:', line):
                 in_target_note = True
@@ -152,23 +172,22 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
             i += 1
             continue
 
-        # Inside target stage note — update the three fields
         if in_target_note:
             if re.match(r'\s*"pain"\s*:', line):
                 indent = len(line) - len(line.lstrip())
-                escaped = new_pain.replace("\\", "\\\\").replace('"', '\\"')
+                escaped = new_pain.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
                 new_lines.append(" " * indent + '"pain":       "' + escaped + '",\n')
                 i += 1
                 continue
             if re.match(r'\s*"workaround"\s*:', line):
                 indent = len(line) - len(line.lstrip())
-                escaped = new_workaround.replace("\\", "\\\\").replace('"', '\\"')
+                escaped = new_workaround.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
                 new_lines.append(" " * indent + '"workaround": "' + escaped + '",\n')
                 i += 1
                 continue
             if re.match(r'\s*"data_gap"\s*:', line):
                 indent = len(line) - len(line.lstrip())
-                escaped = new_datagap.replace("\\", "\\\\").replace('"', '\\"')
+                escaped = new_datagap.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
                 new_lines.append(" " * indent + '"data_gap":   "' + escaped + '",\n')
                 in_target_note = False
                 i += 1
@@ -181,19 +200,37 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
         f.writelines(new_lines)
 
 
+def save_observations(new_obs_list):
+    with open(DATA_FILE, "r") as f:
+        src = f.read()
+    lines = ["OBSERVATIONS = ["]
+    for item in new_obs_list:
+        escaped = item.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append('    "' + escaped + '",')
+    lines.append("]")
+    new_block = "\n".join(lines)
+    src = re.sub(r"OBSERVATIONS\s*=\s*\[.*?\]", new_block, src, flags=re.DOTALL)
+    with open(DATA_FILE, "w") as f:
+        f.write(src)
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def avg_score(scores):
-    vals = list(scores.values())
+    # Treat score 0 ("N/A" in UI) as non-applicable for averages.
+    vals = [v for v in scores.values() if isinstance(v, (int, float)) and v > 0]
+    if not vals:
+        return None
     return round(sum(vals) / len(vals), 1)
 
 def build_dataframe():
     rows = []
     for p in PERSONAS:
-        row = {"Persona": p["role"], "System": f"[{p['system']}]"}
+        row = {"Team": p["role"], "Primary Systems": f"[{p['system']}]"}
         for s in STAGES:
             row[s["label"]] = p["scores"][s["id"]]
-        row["Avg"] = avg_score(p["scores"])
+        avg = avg_score(p["scores"])
+        row["Avg"] = avg if avg is not None else "N/A"
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -207,7 +244,7 @@ with st.sidebar:
     edit_mode = st.toggle(
         "✏️ Edit Mode",
         value=False,
-        help="Turn on to edit scores and notes directly in the dashboard. Changes save to data.py automatically."
+        help="Turn on to edit scores and notes directly. Changes save to data.py automatically."
     )
 
     if edit_mode:
@@ -223,12 +260,8 @@ with st.sidebar:
 
     st.markdown("---")
 
-    persona_options = ["All Personas"] + [p["role"] for p in PERSONAS]
-    selected_persona_filter = st.selectbox("Filter by Persona", persona_options)
-
-    st.markdown("---")
-    highlight_critical  = st.toggle("⚠ Highlight Critical Only", value=False)
-    show_validated_only = st.toggle("✅ Validated Interviews Only", value=False)
+    persona_options = ["All Teams"] + [p["role"] for p in PERSONAS]
+    selected_persona_filter = st.selectbox("Filter by Team", persona_options)
 
     st.markdown("---")
     st.markdown("**Pain Score Legend**")
@@ -243,26 +276,29 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Interview Status**")
     for p in PERSONAS:
-        if p["status"] == "validated":
-            badge = "<span style='background:#D1FAE5;color:#065F46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid #6EE7B7;'>✅ Validated</span>"
-        else:
-            badge = "<span style='background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid #FCD34D;'>🔵 Hypothesis</span>"
+        badge = (
+            "<span style='background:#D1FAE5;color:#065F46;font-size:9px;font-weight:700;"
+            "padding:1px 6px;border-radius:4px;border:1px solid #6EE7B7;'>✅ Validated</span>"
+            if p["status"] == "validated" else
+            "<span style='background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;"
+            "padding:1px 6px;border-radius:4px;border:1px solid #FCD34D;'>🔵 Hypothesis</span>"
+        )
         st.markdown(
-            f"<div style='margin-bottom:6px;font-size:12px;'><strong>{p['role']}</strong> {badge}</div>",
+            f"<div style='margin-bottom:6px;font-size:12px;'>"
+            f"<strong>{p['role']}</strong> {badge}</div>",
             unsafe_allow_html=True
         )
 
 
 # ── Header ────────────────────────────────────────────────────────────────────
 
-mode_tag = "✏️ Edit Mode ON — click any cell to edit" if edit_mode else "🔵 Click any cell for detail"
+mode_tag = "✏️ Edit Mode ON — click any cell to edit" if edit_mode else "🔵 Click for details"
 st.markdown(f"""
 <div class="vfb-header">
     <h1>🗺️ {APP_TITLE}</h1>
     <p>{APP_SUBTITLE}</p>
     <div style="margin-top:8px;">
-        <span class="vfb-tag">🟢 YOU LEAD = Data &amp; Systems row</span>
-        <span class="vfb-tag">{mode_tag}</span>
+<span class="vfb-tag">{mode_tag}</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -271,38 +307,36 @@ st.markdown(f"""
 # ── Filter ────────────────────────────────────────────────────────────────────
 
 visible_personas = list(PERSONAS)
-if selected_persona_filter != "All Personas":
+if selected_persona_filter != "All Teams":
     visible_personas = [p for p in visible_personas if p["role"] == selected_persona_filter]
-if show_validated_only:
-    visible_personas = [p for p in visible_personas if p["status"] == "validated"]
-if highlight_critical:
-    visible_personas = [p for p in visible_personas if any(v == 4 for v in p["scores"].values())]
 
 if not visible_personas:
-    st.warning("No personas match the current filters.")
+    st.warning("No teams match the current filters.")
     st.stop()
 
 
 # ── Grid ──────────────────────────────────────────────────────────────────────
 
-st.markdown("### Current-State Pain Heat Map")
+st.markdown("### Current-State System Pain Heat Map")
 if edit_mode:
     st.caption("✏️ Edit Mode — click ✏️ on any cell to open the edit panel below.")
 else:
-    st.caption("Click → on any cell to see the detail panel. Toggle Edit Mode in the sidebar to update scores and notes.")
+    st.caption("Rows = teams · Columns = systems · Click any cell to see pain detail, workaround, and data gap.")
 
-# Headers
-header_cols = st.columns([2.2] + [1] * len(STAGES) + [0.7])
+# Column widths: team label + one per system + avg
+col_widths = [2.0] + [1.05] * len(STAGES) + [0.6]
+header_cols = st.columns(col_widths)
+
 header_cols[0].markdown(
     "<div style='font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;"
-    "letter-spacing:0.08em;padding:4px 0;'>Persona</div>",
+    "letter-spacing:0.08em;padding:4px 0;'>Team</div>",
     unsafe_allow_html=True
 )
 for i, s in enumerate(STAGES):
     header_cols[i + 1].markdown(
         f"<div style='font-size:10px;font-weight:700;color:#1A5C38;text-align:center;"
         f"padding:4px 2px;line-height:1.3;'>{s['label']}<br>"
-        f"<span style='font-size:8.5px;color:#9CA3AF;font-weight:400;'>{s['desc']}</span></div>",
+        f"<span style='font-size:8px;color:#9CA3AF;font-weight:400;'>{s['desc']}</span></div>",
         unsafe_allow_html=True
     )
 header_cols[-1].markdown(
@@ -311,28 +345,43 @@ header_cols[-1].markdown(
 )
 st.markdown("<hr style='margin:4px 0 8px;border-color:#E5E5E0;'>", unsafe_allow_html=True)
 
+# ── Handle query-param cell clicks ───────────────────────────────────────────
+qp = st.query_params.get("sel", None)
+if qp:
+    if st.session_state.get("selected_cell") and (
+        st.session_state["selected_cell"]["persona_id"] + "__" +
+        st.session_state["selected_cell"]["stage_id"] == qp
+    ):
+        st.session_state["selected_cell"] = None
+    else:
+        parts = qp.split("__", 1)
+        if len(parts) == 2:
+            st.session_state["selected_cell"] = {"persona_id": parts[0], "stage_id": parts[1]}
+    st.query_params.clear()
+    st.rerun()
+
 selected_cell = st.session_state.get("selected_cell", None)
 
 for p in visible_personas:
-    row_cols = st.columns([2.2] + [1] * len(STAGES) + [0.7])
-    bg           = "#F0FDFA" if p["is_emma"] else "white"
-    border_color = "#CCFBF1" if p["is_emma"] else "#E5E5E0"
+    row_cols    = st.columns(col_widths)
+    bg           = "white"
+    border_color = "#E5E5E0"
     p_color      = p["color"]
 
-    you_badge = (
-        "<span style='background:#0D9488;color:white;font-size:9px;font-weight:800;"
-        "padding:1px 6px;border-radius:4px;margin-left:6px;'>YOU</span>"
-        if p["is_emma"] else ""
+    you_badge = ""
+    status_badge = (
+        "<span style='background:#D1FAE5;color:#065F46;font-size:9px;font-weight:700;"
+        "padding:1px 6px;border-radius:4px;border:1px solid #6EE7B7;'>✅</span>"
+        if p["status"] == "validated" else
+        "<span style='background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;"
+        "padding:1px 6px;border-radius:4px;border:1px solid #FCD34D;'>🔵</span>"
     )
-    if p["status"] == "validated":
-        status_badge = "<span style='background:#D1FAE5;color:#065F46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid #6EE7B7;'>✅</span>"
-    else:
-        status_badge = "<span style='background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid #FCD34D;'>🔵</span>"
 
     row_cols[0].markdown(
         f"<div style='background:{bg};border-radius:8px;padding:8px 10px;border:1px solid {border_color};'>"
         f"<div style='display:flex;align-items:center;gap:4px;'>"
-        f"<span style='width:8px;height:8px;border-radius:50%;background:{p_color};display:inline-block;flex-shrink:0;'></span>"
+        f"<span style='width:8px;height:8px;border-radius:50%;background:{p_color};"
+        f"display:inline-block;flex-shrink:0;'></span>"
         f"<strong style='font-size:12px;'>{p['role']}</strong>{you_badge} {status_badge}</div>"
         f"<div style='font-size:10px;color:#6B7280;margin-left:13px;margin-top:2px;'>{p['subtitle']}</div>"
         f"<div style='font-size:9px;color:{p_color};margin-left:13px;font-weight:600;'>[{p['system']}]</div>"
@@ -343,75 +392,88 @@ for p in visible_personas:
     for i, s in enumerate(STAGES):
         score = p["scores"][s["id"]]
         h     = HEAT_COLORS[score]
-        cell_key = f"cell_{p['id']}_{s['id']}"
         is_selected = (
             selected_cell is not None
             and selected_cell["persona_id"] == p["id"]
             and selected_cell["stage_id"]   == s["id"]
         )
+        warn       = "⚠ " if score == 4 else ""
+        cell_label = h["label"] if score > 0 else "N/A"
+        sel_border = f"2.5px solid {p_color}" if is_selected else f"1.5px solid {h['dot']}80"
+        sel_shadow = f"0 0 0 3px {p_color}30" if is_selected else "none"
+        txt_color  = "#9CA3AF" if score == 0 else h["text"]
+        font_style = "italic" if score == 0 else "normal"
+        qp_val     = f"{p['id']}__{s['id']}"
 
-        sel_color  = "#0D9488" if p["is_emma"] else p_color
-        border     = f"2.5px solid {sel_color}" if is_selected else f"1.5px solid {h['dot']}80"
-        glow       = f"0 0 0 3px {p_color}30"  if is_selected else "none"
-        dot_shadow = "0 0 6px " + h["dot"] + "80" if score >= 3 else "none"
-
-        dot_html   = (
-            f"<div style='width:11px;height:11px;border-radius:50%;background:{h['dot']};"
-            f"margin:0 auto 3px;box-shadow:{dot_shadow};'></div>"
-        ) if score > 0 else ""
-        warn       = "⚠" if score == 4 else ""
-        label_html = f"<div style='font-size:10px;font-weight:700;color:{h['text']};'>{h['label'] if score > 0 else '—'}</div>"
-        warn_html  = f"<div style='font-size:9px;color:{h['text']};font-weight:800;'>{warn}</div>" if warn else ""
-
+        # Single styled <a> tag — no button, no ghost, full color control
         row_cols[i + 1].markdown(
-            f"<div style='background:{h['bg']};border:{border};border-radius:8px;"
-            f"padding:8px 4px;text-align:center;min-height:52px;display:flex;flex-direction:column;"
-            f"align-items:center;justify-content:center;box-shadow:{glow};'>"
-            f"{dot_html}{label_html}{warn_html}</div>",
+            f"<a href='?sel={qp_val}' target='_self' style='"
+            f"display:flex;align-items:center;justify-content:center;"
+            f"background:{h['bg']};"
+            f"border:{sel_border};"
+            f"border-radius:8px;"
+            f"box-shadow:{sel_shadow};"
+            f"min-height:62px;"
+            f"padding:10px 6px;"
+            f"text-decoration:none;"
+            f"cursor:pointer;"
+            f"font-size:13px;font-weight:700;"
+            f"color:{txt_color};"
+            f"font-style:{font_style};"
+            f"'>{warn}{cell_label}</a>",
             unsafe_allow_html=True
         )
 
-        btn_label = "✏️" if edit_mode else "→"
-        if row_cols[i + 1].button(btn_label, key=cell_key, use_container_width=True):
-            if is_selected:
-                st.session_state["selected_cell"] = None
-            else:
-                st.session_state["selected_cell"] = {"persona_id": p["id"], "stage_id": s["id"]}
-            st.rerun()
-
     # Row average
-    r_avg   = avg_score(p["scores"])
-    h_avg   = HEAT_COLORS[round(r_avg)]
-    row_cols[-1].markdown(
-        f"<div style='background:{h_avg['bg']};border:1.5px solid {h_avg['dot']};"
-        f"border-radius:8px;text-align:center;padding:10px 4px;min-height:52px;"
-        f"display:flex;align-items:center;justify-content:center;'>"
-        f"<span style='font-size:14px;font-weight:800;color:{h_avg['text']};'>{r_avg}</span></div>",
-        unsafe_allow_html=True
-    )
+    r_avg = avg_score(p["scores"])
+    if r_avg is None:
+        row_cols[-1].markdown(
+            "<div style='background:#F8FAF8;border:1.5px solid #D1D5DB;"
+            "border-radius:8px;text-align:center;padding:10px 4px;min-height:62px;"
+            "display:flex;align-items:center;justify-content:center;'>"
+            "<span style='font-size:14px;font-weight:800;color:#9CA3AF;font-style:italic;'>N/A</span></div>",
+            unsafe_allow_html=True
+        )
+    else:
+        h_avg = HEAT_COLORS[round(r_avg)]
+        row_cols[-1].markdown(
+            f"<div style='background:{h_avg['bg']};border:1.5px solid {h_avg['dot']};"
+            f"border-radius:8px;text-align:center;padding:10px 4px;min-height:62px;"
+            f"display:flex;align-items:center;justify-content:center;'>"
+            f"<span style='font-size:14px;font-weight:800;color:{h_avg['text']};'>{r_avg}</span></div>",
+            unsafe_allow_html=True
+        )
     st.markdown("<div style='margin-bottom:4px;'></div>", unsafe_allow_html=True)
 
 
-# ── Stage averages ────────────────────────────────────────────────────────────
+# ── System (column) averages ──────────────────────────────────────────────────
 
-if selected_persona_filter == "All Personas":
+if selected_persona_filter == "All Teams":
     st.markdown("<hr style='margin:8px 0 4px;border-color:#E5E5E0;'>", unsafe_allow_html=True)
-    avg_cols = st.columns([2.2] + [1] * len(STAGES) + [0.7])
+    avg_cols = st.columns(col_widths)
     avg_cols[0].markdown(
         "<div style='font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;"
-        "letter-spacing:0.08em;padding:8px 10px;'>Stage Avg</div>",
+        "letter-spacing:0.08em;padding:8px 10px;'>System Avg</div>",
         unsafe_allow_html=True
     )
     for i, s in enumerate(STAGES):
-        stage_scores = [p["scores"][s["id"]] for p in PERSONAS]
-        s_avg  = round(sum(stage_scores) / len(stage_scores), 1)
-        h      = HEAT_COLORS[round(s_avg)]
-        avg_cols[i + 1].markdown(
-            f"<div style='background:{h['bg']};border:1.5px solid {h['dot']};"
-            f"border-radius:8px;text-align:center;padding:8px 4px;'>"
-            f"<span style='font-size:13px;font-weight:800;color:{h['text']};'>{s_avg}</span></div>",
-            unsafe_allow_html=True
-        )
+        sys_scores = [p["scores"][s["id"]] for p in PERSONAS if p["scores"][s["id"]] > 0]
+        if not sys_scores:
+            avg_cols[i + 1].markdown(
+                "<div style='background:#F8FAF8;border:1.5px solid #D1D5DB;"
+                "border-radius:8px;text-align:center;padding:8px 4px;'>"
+                "<span style='font-size:13px;font-weight:800;color:#9CA3AF;font-style:italic;'>N/A</span></div>",
+                unsafe_allow_html=True
+            )
+        else:
+            s_avg = round(sum(sys_scores) / len(sys_scores), 1)
+            h = HEAT_COLORS[round(s_avg)]
+            avg_cols[i + 1].markdown(
+                f"<div style='background:{h['bg']};border:1.5px solid {h['dot']};"
+                f"border-radius:8px;text-align:center;padding:8px 4px;'>"
+                f"<span style='font-size:13px;font-weight:800;color:{h['text']};'>{s_avg}</span></div>",
+                unsafe_allow_html=True
+            )
     avg_cols[-1].markdown("")
 
 
@@ -436,10 +498,12 @@ if selected_cell:
         )
         st.markdown(
             f"<div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;'>"
-            f"<span style='width:10px;height:10px;border-radius:50%;background:{persona['color']};display:inline-block;'></span>"
+            f"<span style='width:10px;height:10px;border-radius:50%;background:{persona['color']};"
+            f"display:inline-block;'></span>"
             f"<strong style='font-size:15px;'>{persona['role']}</strong>"
             f"<span style='color:#6B7280;'>→</span>"
             f"<strong style='font-size:15px;'>{stage['label']}</strong>"
+            f"<span style='font-size:10px;color:#9CA3AF;'>({stage['desc']})</span>"
             f"<span style='background:{h['bg']};color:{h['text']};border:1px solid {h['dot']};"
             f"font-size:11px;font-weight:800;padding:2px 10px;border-radius:10px;'>{h['label']} Pain</span>"
             f"{edit_badge}</div>",
@@ -447,15 +511,7 @@ if selected_cell:
         )
 
         if edit_mode:
-            # ── EDIT FORM ─────────────────────────────────────────────────────
-            score_labels = {
-                0: "0 — None",
-                1: "1 — Low",
-                2: "2 — Medium",
-                3: "3 — High",
-                4: "4 — Critical ⚠"
-            }
-
+            score_labels = {0: "0 — None", 1: "1 — Low", 2: "2 — Medium", 3: "3 — High", 4: "4 — Critical ⚠"}
             col_score, col_status = st.columns([2, 1])
             with col_score:
                 new_score = st.select_slider(
@@ -486,7 +542,7 @@ if selected_cell:
                 key=f"edit_wa_{persona['id']}_{stage['id']}"
             )
             new_datagap = st.text_area(
-                f"🩵 Data Gap ({EMMA_LABEL})",
+                "🩵 Data Gap",
                 value=note.get("data_gap", ""),
                 height=90,
                 key=f"edit_dg_{persona['id']}_{stage['id']}"
@@ -511,7 +567,6 @@ if selected_cell:
                     st.rerun()
 
         else:
-            # ── READ-ONLY DETAIL ──────────────────────────────────────────────
             c1, c2, c3 = st.columns(3)
             with c1:
                 st.markdown(
@@ -532,7 +587,7 @@ if selected_cell:
             with c3:
                 st.markdown(
                     f"<div class='detail-datagap'>"
-                    f"<div class='detail-label' style='color:#0D9488;'>🩵 Data Gap ({EMMA_LABEL})</div>"
+                    "<div class='detail-label' style='color:#0D9488;'>🩵 Data Gap</div>"
                     f"<div style='font-size:13px;line-height:1.6;'>{note.get('data_gap') or '—'}</div>"
                     f"</div>",
                     unsafe_allow_html=True
@@ -546,7 +601,7 @@ else:
     prompt = (
         "✏️ Click any ✏️ button in the grid to edit that cell's score and notes"
         if edit_mode else
-        "👆 Click any → button in the grid to see the pain detail, workaround, and data gap"
+        "👆 Click for details"
     )
     st.markdown(
         f"<div style='background:white;border:1px dashed #E5E5E0;border-radius:10px;"
@@ -558,33 +613,17 @@ else:
 
 # ── Key observations ──────────────────────────────────────────────────────────
 
-def save_observations(new_obs_list):
-    """Write updated OBSERVATIONS list back to data.py."""
-    with open(DATA_FILE, "r") as f:
-        src = f.read()
-    lines = ["OBSERVATIONS = ["]
-    for item in new_obs_list:
-        escaped = item.replace("\\", "\\\\").replace('"', '\\"')
-        lines.append('    "' + escaped + '",')
-    lines.append("]")
-    new_block = "\n".join(lines)
-    src = re.sub(r"OBSERVATIONS\s*=\s*\[.*?\]", new_block, src, flags=re.DOTALL)
-    with open(DATA_FILE, "w") as f:
-        f.write(src)
+editing_obs = st.session_state.get("editing_observations", False)
 
 st.markdown("---")
-
-# Header row
 obs_col, obs_btn_col = st.columns([8, 1])
 with obs_col:
     st.markdown(
         f"<div style='font-size:11px;font-weight:800;color:#0D9488;"
         f"text-transform:uppercase;letter-spacing:0.08em;'>"
-        f"🎯 {EMMA_LABEL}'s Key Data Engineering Observations</div>",
+        "🎯 Key Data Engineering Observations</div>",
         unsafe_allow_html=True
     )
-
-editing_obs = st.session_state.get("editing_observations", False)
 
 if edit_mode and not editing_obs:
     with obs_btn_col:
@@ -594,39 +633,25 @@ if edit_mode and not editing_obs:
             st.rerun()
 
 if editing_obs and edit_mode:
-    # Edit mode — show text inputs for each observation + add/remove controls
     st.markdown("<div style='background:white;border:2px solid #C8A84B;border-radius:12px;padding:18px 20px;margin-top:10px;'>", unsafe_allow_html=True)
-
     draft = st.session_state.get("obs_draft", list(OBSERVATIONS))
     new_draft = []
-
     for idx, obs in enumerate(draft):
         row_col, del_col = st.columns([10, 1])
         with row_col:
-            updated = st.text_area(
-                f"Observation {idx + 1}",
-                value=obs,
-                height=80,
-                key=f"obs_text_{idx}",
-                label_visibility="collapsed"
-            )
+            updated = st.text_area(f"Observation {idx + 1}", value=obs, height=80,
+                                   key=f"obs_text_{idx}", label_visibility="collapsed")
             new_draft.append(updated)
         with del_col:
-            st.markdown("<div style='margin-top:4px;'>", unsafe_allow_html=True)
-            if st.button("🗑", key=f"obs_del_{idx}", help="Remove this observation"):
+            if st.button("🗑", key=f"obs_del_{idx}"):
                 draft.pop(idx)
                 st.session_state["obs_draft"] = draft
                 st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-
     st.session_state["obs_draft"] = new_draft
-
     if st.button("➕ Add observation", key="obs_add"):
         st.session_state["obs_draft"].append("")
         st.rerun()
-
     st.markdown("</div>", unsafe_allow_html=True)
-
     save_col2, cancel_col2, _ = st.columns([1, 1, 5])
     with save_col2:
         if st.button("💾 Save observations", type="primary", use_container_width=True):
@@ -644,9 +669,7 @@ if editing_obs and edit_mode:
             st.session_state["editing_observations"] = False
             st.session_state.pop("obs_draft", None)
             st.rerun()
-
 else:
-    # Read-only display
     items_html = "".join(f"<li style='margin-bottom:6px;'>{obs}</li>" for obs in OBSERVATIONS)
     st.markdown(
         f"<div class='obs-box' style='margin-top:8px;'>"
@@ -666,7 +689,7 @@ with st.expander("📥 Export scores as CSV"):
     st.download_button(
         label="Download heat map scores (.csv)",
         data=csv,
-        file_name="vfb_pain_heatmap_scores.csv",
+        file_name="vafb_system_pain_heatmap.csv",
         mime="text/csv",
     )
     st.dataframe(df, use_container_width=True)

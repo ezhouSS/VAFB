@@ -1,8 +1,8 @@
 # =============================================================================
 # VFB PAIN HEATMAP — DATA FILE
 # =============================================================================
-# This is the ONLY file you need to edit between interviews.
-# Update scores (0–4) and notes after each stakeholder conversation.
+# X axis: Systems (with functional descriptions)
+# Y axis: Teams / Personas
 #
 # SCORE GUIDE:
 #   0 = None      (no pain observed)
@@ -12,369 +12,427 @@
 #   4 = Critical  (blocking, major data/process gap)
 # =============================================================================
 
-# ── JOURNEY STAGES ────────────────────────────────────────────────────────────
-# Add, remove, or rename stages here. The grid will update automatically.
-STAGES = [
-    {"id": "aware",    "label": "Aware",            "desc": "Member/customer first learns about VFB"},
-    {"id": "join",     "label": "Join / Buy",        "desc": "Joins as member or purchases a policy"},
-    {"id": "inforce",  "label": "Policy in Force",   "desc": "Active relationship — ongoing management"},
-    {"id": "service",  "label": "Service Event",     "desc": "Claim, change request, or support interaction"},
-    {"id": "renew",    "label": "Renewal / Expand",  "desc": "Policy renewal or cross-sell opportunity"},
-]
+APP_TITLE    = "VAFB System Pain Heat Map"
+APP_SUBTITLE = "Evidence-derived from stakeholder interviews — pain intensity per team × system"
+APP_CLIENT   = "Virginia Farm Bureau"
+EMMA_LABEL   = "Data & Systems"
 
-# ── PERSONAS ──────────────────────────────────────────────────────────────────
-# Each persona has:
-#   - id:       unique key (no spaces)
-#   - role:     display name
-#   - subtitle: name + title
-#   - system:   which system they primarily use
-#   - color:    hex color for the row label
-#   - is_emma:  True = highlight as your row (data engineer view)
-#   - status:   "hypothesis" = pre-interview | "validated" = post-interview
-#   - scores:   pain score per stage id (0–4)
-#   - notes:    detail per stage — pain, workaround, data_gap
-#               Set any field to "" if not yet known.
-# =============================================================================
-
-PERSONAS = [
-
-    # ── DATA & SYSTEMS (Emma) ─────────────────────────────────────────────────
-    {
-        "id": "data",
-        "role": "Data & Systems",
-        "subtitle": "Emma — Data Engineer / Governance",
-        "system": "Both",
-        "color": "#0D9488",
-        "is_emma": True,
-        "status": "hypothesis",   # change to "validated" after you confirm with Patrick + Jenny
-        "scores": {
-            "aware":   2,
-            "join":    4,
-            "inforce": 4,
-            "service": 3,
-            "renew":   3,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "No unified data source for prospect tracking",
-                "workaround": "—",
-                "data_gap":   "Prospect data lives in spreadsheets, not Finys or Personify",
-            },
-            "join": {
-                "pain":       "No shared member/policyholder ID between Finys and Personify",
-                "workaround": "Manual name + address matching",
-                "data_gap":   "CRITICAL: identity bridge does not exist — root cause of most downstream pain",
-            },
-            "inforce": {
-                "pain":       "No system of record — Finys and Personify hold conflicting member data",
-                "workaround": "Staff manually reconcile on case-by-case basis",
-                "data_gap":   "No master data management process defined at VFB",
-            },
-            "service": {
-                "pain":       "Claims data in Finys not visible to Personify relationship managers",
-                "workaround": "Phone calls between departments",
-                "data_gap":   "No real-time integration between claims and CRM layer",
-            },
-            "renew": {
-                "pain":       "Renewal data in Finys not triggering outreach in Personify or CRM",
-                "workaround": "Agent spreadsheets",
-                "data_gap":   "No event-driven data pipeline for renewal triggers",
-            },
-        },
-    },
-
-    # ── RAY LEONARD — Insurance Agent ─────────────────────────────────────────
-    {
-        "id": "ray",
-        "role": "Ray Leonard",
-        "subtitle": "Insurance Agent",
-        "system": "Finys",
-        "color": "#2563EB",
-        "is_emma": False,
-        "status": "hypothesis",
-        "scores": {
-            "aware":   1,
-            "join":    3,
-            "inforce": 3,
-            "service": 2,
-            "renew":   4,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "Limited visibility into which Personify members haven't bought a policy",
-                "workaround": "Relies on referrals and county office walk-ins",
-                "data_gap":   "No prospect pipeline from Personify member list into agent view",
-            },
-            "join": {
-                "pain":       "Must open Finys and Personify separately to get full member picture at point of sale",
-                "workaround": "Keeps browser tabs open side-by-side",
-                "data_gap":   "No unified view at point of sale",
-            },
-            "inforce": {
-                "pain":       "No proactive alerts when a member's situation changes (new vehicle, new property)",
-                "workaround": "Relies on member calling in",
-                "data_gap":   "No event triggers from Personify or Finys to agent workflow",
-            },
-            "service": {
-                "pain":       "Has to re-enter information already in Finys when logging a service interaction",
-                "workaround": "Accepts duplicate data entry",
-                "data_gap":   "No CRM layer on top of Finys service module",
-            },
-            "renew": {
-                "pain":       "No automated renewal reminder workflow — manually tracks in spreadsheet",
-                "workaround": "Personal Excel tracker maintained outside any system",
-                "data_gap":   "Renewal dates in Finys not exposed to any CRM or workflow tool",
-            },
-        },
-    },
-
-    # ── BOB BROWN — Relationship Manager ──────────────────────────────────────
-    {
-        "id": "bob",
-        "role": "Bob Brown",
-        "subtitle": "Relationship Manager",
-        "system": "Personify",
-        "color": "#16A34A",
-        "is_emma": False,
-        "status": "hypothesis",
-        "scores": {
-            "aware":   2,
-            "join":    2,
-            "inforce": 3,
-            "service": 4,
-            "renew":   3,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "Can't see which members are also policyholders vs. members-only",
-                "workaround": "Asks colleagues or checks Finys separately",
-                "data_gap":   "Member ↔ policyholder linkage not surfaced in Personify",
-            },
-            "join": {
-                "pain":       "No notification when a member converts to a policyholder",
-                "workaround": "Finds out through agent conversation",
-                "data_gap":   "No event fired from Finys to Personify on policy issuance",
-            },
-            "inforce": {
-                "pain":       "Can't see policy status, coverage gaps, or renewal dates in Personify",
-                "workaround": "Calls Jenny or Ray to look it up in Finys",
-                "data_gap":   "Policy data not surfaced in member relationship view",
-            },
-            "service": {
-                "pain":       "No visibility into open claims — finds out member is in distress after the fact",
-                "workaround": "Relies on member calling him directly",
-                "data_gap":   "Claims data completely siloed in Finys — no feed to Personify",
-            },
-            "renew": {
-                "pain":       "Can't proactively reach out ahead of renewal — doesn't know when renewals are due",
-                "workaround": "Relies on agent to loop him in",
-                "data_gap":   "Renewal trigger not shared with relationship management side",
-            },
-        },
-    },
-
-    # ── JASON — Sales Enablement ───────────────────────────────────────────────
-    {
-        "id": "jason",
-        "role": "Jason",
-        "subtitle": "Sales Enablement",
-        "system": "Both",
-        "color": "#7C3AED",
-        "is_emma": False,
-        "status": "hypothesis",
-        "scores": {
-            "aware":   3,
-            "join":    3,
-            "inforce": 2,
-            "service": 1,
-            "renew":   3,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "Pipeline data is stale — weekly exports mean leads are 5–7 days old",
-                "workaround": "Manual weekly export from Personify",
-                "data_gap":   "No real-time pipeline feed from either system",
-            },
-            "join": {
-                "pain":       "No visibility into conversion rate from member to policyholder",
-                "workaround": "Manual count from two separate reports",
-                "data_gap":   "No joined metric bridging Finys and Personify conversion data",
-            },
-            "inforce": {
-                "pain":       "Hard to identify cross-sell opportunities for existing policyholders",
-                "workaround": "Ray manually reviews his own book of business",
-                "data_gap":   "No propensity scoring or next-best-product logic",
-            },
-            "service": {
-                "pain":       "Minimal involvement in service events",
-                "workaround": "—",
-                "data_gap":   "—",
-            },
-            "renew": {
-                "pain":       "No consolidated view of renewal pipeline across all agents",
-                "workaround": "Collects spreadsheets from each agent weekly",
-                "data_gap":   "Renewal data fragmented per agent — no rollup in Finys or Personify",
-            },
-        },
-    },
-
-    # ── BILL — VP Marketing & Sales ───────────────────────────────────────────
-    {
-        "id": "bill",
-        "role": "Bill",
-        "subtitle": "VP Marketing & Sales",
-        "system": "Both",
-        "color": "#C8A84B",
-        "is_emma": False,
-        "status": "hypothesis",
-        "scores": {
-            "aware":   4,
-            "join":    3,
-            "inforce": 2,
-            "service": 1,
-            "renew":   3,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "Campaign lists from Personify exports — always stale, no targeting by policy status",
-                "workaround": "Weekly manual export, filtered in Excel",
-                "data_gap":   "No real-time segment combining member + policyholder data",
-            },
-            "join": {
-                "pain":       "No closed-loop reporting from marketing campaign to policy conversion",
-                "workaround": "Estimates attribution manually",
-                "data_gap":   "No campaign → conversion tracking across Personify and Finys",
-            },
-            "inforce": {
-                "pain":       "Hard to measure member engagement vs. policy depth",
-                "workaround": "Separate reporting from each system, joined in Excel",
-                "data_gap":   "No unified member value or engagement score",
-            },
-            "service": {
-                "pain":       "Limited marketing involvement in service journeys",
-                "workaround": "—",
-                "data_gap":   "—",
-            },
-            "renew": {
-                "pain":       "Renewal campaigns sent without knowing which members are already in renewal workflow with agent",
-                "workaround": "Accepts duplication and noise in campaigns",
-                "data_gap":   "No signal from Finys renewal status to suppress or personalize Personify campaigns",
-            },
-        },
-    },
-
-    # ── KAREN — Director of Business Solutions ────────────────────────────────
-    {
-        "id": "karen",
-        "role": "Karen",
-        "subtitle": "Dir. Business Solutions",
-        "system": "Personify",
-        "color": "#1A5C38",
-        "is_emma": False,
-        "status": "hypothesis",
-        "scores": {
-            "aware":   1,
-            "join":    3,
-            "inforce": 4,
-            "service": 2,
-            "renew":   2,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "Limited visibility into prospect pipeline",
-                "workaround": "—",
-                "data_gap":   "—",
-            },
-            "join": {
-                "pain":       "New member onboarding not connected to insurance enrollment — two separate workflows",
-                "workaround": "Manual handoff between membership and insurance teams",
-                "data_gap":   "No integrated onboarding flow bridging Personify and Finys",
-            },
-            "inforce": {
-                "pain":       "Personify member records and Finys policyholder records frequently out of sync (address, name, status)",
-                "workaround": "Periodic manual reconciliation — time-consuming",
-                "data_gap":   "No automated sync — critical data governance gap requiring system-of-record decision",
-            },
-            "service": {
-                "pain":       "Business solutions team not always looped in on complex service events",
-                "workaround": "Relies on escalation calls",
-                "data_gap":   "No workflow routing from Finys service events to Personify",
-            },
-            "renew": {
-                "pain":       "Renewal reporting requires pulling from both systems and joining manually",
-                "workaround": "Analyst spends significant time on reconciliation",
-                "data_gap":   "No consolidated renewal report across both systems",
-            },
-        },
-    },
-
-    # ── JENNY GLEN — CRM Developer ────────────────────────────────────────────
-    {
-        "id": "jenny",
-        "role": "Jenny Glen",
-        "subtitle": "CRM Developer",
-        "system": "Finys",
-        "color": "#EA580C",
-        "is_emma": False,
-        "status": "hypothesis",
-        "scores": {
-            "aware":   0,
-            "join":    2,
-            "inforce": 3,
-            "service": 2,
-            "renew":   3,
-        },
-        "notes": {
-            "aware": {
-                "pain":       "—",
-                "workaround": "—",
-                "data_gap":   "—",
-            },
-            "join": {
-                "pain":       "No API for Finys — data sync requires scheduled batch jobs, causing latency",
-                "workaround": "Batch ETL runs nightly",
-                "data_gap":   "Real-time integration not currently possible without significant API development",
-            },
-            "inforce": {
-                "pain":       "CRM customization requests backlogged — Finys configuration changes require significant dev effort",
-                "workaround": "Workarounds built outside the system",
-                "data_gap":   "Technical debt limiting ability to expose data to a new CRM layer",
-            },
-            "service": {
-                "pain":       "Service event data not structured in a way that's easy to expose to external systems",
-                "workaround": "Custom queries on request",
-                "data_gap":   "No standardized data contract for service event feed",
-            },
-            "renew": {
-                "pain":       "Renewal workflow logic is embedded in Finys — hard to extract or trigger external processes",
-                "workaround": "Manual notification scripts",
-                "data_gap":   "Renewal event not published as a data event — no pub/sub pattern exists",
-            },
-        },
-    },
-
-]
-
-# ── HEAT COLOR SCALE ──────────────────────────────────────────────────────────
-# Customize score → color mapping here.
-# bg = cell background, text = text color, dot = indicator dot color
+# ── HEAT COLORS ───────────────────────────────────────────────────────────────
 HEAT_COLORS = {
-    0: {"bg": "#F8FAF8", "text": "#9CA3AF", "dot": "#D1D5DB", "label": "None"},
-    1: {"bg": "#FEF9C3", "text": "#854D0E", "dot": "#FCD34D", "label": "Low"},
-    2: {"bg": "#FED7AA", "text": "#9A3412", "dot": "#FB923C", "label": "Medium"},
-    3: {"bg": "#FECACA", "text": "#7F1D1D", "dot": "#F87171", "label": "High"},
-    4: {"bg": "#FCA5A5", "text": "#450A0A", "dot": "#DC2626", "label": "Critical"},
+    0: {"bg": "#F8FAF8", "text": "#9CA3AF", "label": "None",     "dot": "#D1D5DB"},
+    1: {"bg": "#FEF9C3", "text": "#854D0E", "label": "Low",      "dot": "#FCD34D"},
+    2: {"bg": "#FED7AA", "text": "#9A3412", "label": "Medium",   "dot": "#FB923C"},
+    3: {"bg": "#FECACA", "text": "#7F1D1D", "label": "High",     "dot": "#F87171"},
+    4: {"bg": "#FCA5A5", "text": "#450A0A", "label": "Critical", "dot": "#DC2626"},
 }
 
-# ── APP METADATA ──────────────────────────────────────────────────────────────
-APP_TITLE       = "VFB Current-State Pain Heat Map"
-APP_SUBTITLE    = "CRM Transformation · Sprint 1 & 2 · Data Engineer View"
-APP_CLIENT      = "Virginia Farm Bureau"
-EMMA_LABEL      = "Emma"   # your name — appears in the YOU badge and data gap column
+# ── SYSTEMS (X axis) ──────────────────────────────────────────────────────────
+# id:       unique key
+# label:    short display name
+# desc:     functional description shown in column header
+STAGES = [
+    {
+        "id":    "personify",
+        "label": "Personify",
+        "desc":  "Member CRM · membership billing · customer record",
+    },
+    {
+        "id":    "finys",
+        "label": "FINYS / Finesse",
+        "desc":  "Policy admin · billing · quotes · claims",
+    },
+    {
+        "id":    "imageright",
+        "label": "ImageRight",
+        "desc":  "Document mgmt · workflow routing · task intake",
+    },
+    {
+        "id":    "ods",
+        "label": "ODS / Dashboards",
+        "desc":  "Reporting layer · analytics · leadership visibility",
+    },
+    {
+        "id":    "netsuite",
+        "label": "NetSuite",
+        "desc":  "Finance · inventory · product pricing · payments",
+    },
+    {
+        "id":    "hubspot",
+        "label": "HubSpot",
+        "desc":  "Marketing automation · campaign CRM · lead tracking",
+    },
+    {
+        "id":    "nexsure",
+        "label": "Nexsure / Brokerage",
+        "desc":  "Brokerage policy mgmt · carrier data · commissions",
+    },
+    {
+        "id":    "countryway",
+        "label": "Countryway / AS400",
+        "desc":  "Legacy insurance stack · CW migration · dual-entry",
+    },
+    {
+        "id":    "personify_finys_link",
+        "label": "Personify ↔ FINYS Link",
+        "desc":  "Nightly file transfer · member-policy identity bridge",
+    },
+    {
+        "id":    "oneinc",
+        "label": "One Inc",
+        "desc":  "Payment provider · billing integration · reconciliation",
+    },
+]
+
+# ── PERSONAS / TEAMS (Y axis) ─────────────────────────────────────────────────
+# Each persona represents a team. Scores keyed by system id above.
+PERSONAS = [
+    # ── Underwriting / Policy Services ───────────────────────────────────────
+    {
+        "id":       "underwriting",
+        "role":     "Underwriting",
+        "subtitle": "Ben Ashby · Scott Denoon · Ed Baumgartner",
+        "system":   "FINYS + Personify + ImageRight",
+        "color":    "#993C1D",
+        "status":   "validated",
+        "scores": {
+            "personify":          3,
+            "finys":              3,
+            "imageright":         2,
+            "ods":                2,
+            "netsuite":           0,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         1,
+            "personify_finys_link": 4,
+            "oneinc":             1,
+        },
+        "notes": {
+            "personify":          {"pain": "Major demographic gaps (DOB often missing/wrong); householding limitations block cross-sell and family-based journeys", "workaround": "Manual lookup and data patching across systems", "data_gap": "No reliable member profile to anchor underwriting decisions; member ↔ policyholder link unconfirmed"},
+            "finys":              {"pain": "Staff must jump across 2–3 systems to assemble member/policy/loss/payment context", "workaround": "Manual toggling between FINYS and ImageRight; rekeying increases errors", "data_gap": "No single system surfaces complete policy + customer + loss context together"},
+            "imageright":         {"pain": "Paper intake dependency creates delays; fragmented documentation slows complete file assembly", "workaround": "Scanning/indexing team acts as bottleneck; manual routing", "data_gap": "Document context not surfaced natively in FINYS — requires manual cross-reference"},
+            "ods":                {"pain": "Data trust issues when source systems don't link cleanly", "workaround": "Manual report wrangling", "data_gap": "ODS reports have hidden filters from past migrations; payment data missing"},
+            "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "Minor legacy dependency for some policy lookups", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Nightly pipeline failures have no retry — missed transfers create persistent data gaps requiring manual cleanup", "workaround": "Data analysts manually restart failed processes; some data permanently lost", "data_gap": "Breaks customer ↔ policy linkage; worsens reconciliation and reporting effort"},
+            "oneinc":             {"pain": "Payment visibility gaps force extra manual lookups", "workaround": "Manual reconciliation against policy + customer context", "data_gap": ""},
+        },
+    },
+
+    # ── Claims ────────────────────────────────────────────────────────────────
+    {
+        "id":       "claims",
+        "role":     "Claims",
+        "subtitle": "Laurie Gannon · David Jewell · Ann Baskett",
+        "system":   "FINYS + ImageRight + ODS",
+        "color":    "#B45309",
+        "status":   "validated",
+        "scores": {
+            "personify":          2,
+            "finys":              3,
+            "imageright":         2,
+            "ods":                3,
+            "netsuite":           0,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         1,
+            "personify_finys_link": 3,
+            "oneinc":             1,
+        },
+        "notes": {
+            "personify":          {"pain": "Contact data often 5+ years out of date; no integration to claims vendor systems", "workaround": "Claimant Locator used as fallback — two separate unlinked systems", "data_gap": "No unified claimant contact view; Personify and Claimant Locator not integrated"},
+            "finys":              {"pain": "Claims data completely dark to relationship management side; multi-system lookups required for every case", "workaround": "Manual toggling between FINYS and ImageRight for every claim", "data_gap": "No single system surfaces complete claim + customer + document context"},
+            "imageright":         {"pain": "Fragmented documentation makes complete file assembly slow", "workaround": "Manual cross-reference between FINYS and ImageRight", "data_gap": ""},
+            "ods":                {"pain": "ODS reports have hidden filters — payment data missing, discrepancies up to $100Ks", "workaround": "Claims manager manually pulls from 2–3 systems monthly (~6 hrs/month for a single incurred development report)", "data_gap": "Upstream classification errors make ODS unreliable for claims analytics"},
+            "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "Farm claims still touch legacy stack", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Broken linkage means claims staff cannot confirm customer identity reliably", "workaround": "Manual name/address matching", "data_gap": ""},
+            "oneinc":             {"pain": "Payment reconciliation gaps add manual overhead", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── Policy Services ───────────────────────────────────────────────────────
+    {
+        "id":       "policy_services",
+        "role":     "Policy Services",
+        "subtitle": "Ed Baumgartner · Catherine Reid · Jenny Glenn",
+        "system":   "FINYS + ImageRight + One Inc",
+        "color":    "#7C3AED",
+        "status":   "validated",
+        "scores": {
+            "personify":          2,
+            "finys":              3,
+            "imageright":         3,
+            "ods":                1,
+            "netsuite":           0,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         2,
+            "personify_finys_link": 4,
+            "oneinc":             2,
+        },
+        "notes": {
+            "personify":          {"pain": "Member record often incomplete; agents bypass Personify entirely when MSS staff unavailable", "workaround": "Agents hand-type all customer data directly into FINYS; MSS creates Personify record later", "data_gap": "Parallel records that may never be reconciled; duplicate customer entries"},
+            "finys":              {"pain": "System of work for processing; rekeying and multi-step intake slows throughput", "workaround": "Manual workarounds increase operating cost and inconsistency over time", "data_gap": "No single complete file view — requires ImageRight cross-reference for every case"},
+            "imageright":         {"pain": "Paper intake dependency creates downstream servicing delays when scanning/indexing is slow", "workaround": "Mailroom scanning team is a manual bottleneck; email and online submissions also route through here", "data_gap": "Task routing fragmentation — hard to get complete file view quickly"},
+            "ods":                {"pain": "Limited direct use; downstream pain from bad source data", "workaround": "", "data_gap": ""},
+            "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "Dual-entry burden during migration; AS400 billing vs. deck page system require separate entries", "workaround": "Staff manually enter policies into two systems; missing either step creates billing or documentation failure", "data_gap": "No automated sync between legacy billing and deck page generation"},
+            "personify_finys_link": {"pain": "Nightly pipeline failures create unrecoverable data gaps without manual intervention", "workaround": "Data analysts manually restart; some data permanently lost", "data_gap": "Critical: identity bridge between member and policy records is brittle and unmonitored"},
+            "oneinc":             {"pain": "Payment visibility gaps require extra lookups; reconciliation not unified with policy context", "workaround": "Manual reconciliation", "data_gap": ""},
+        },
+    },
+
+    # ── Membership & Field Services ───────────────────────────────────────────
+    {
+        "id":       "membership",
+        "role":     "Membership & Field Services",
+        "subtitle": "Matt Knuckles · Karen Smith · Daryl Butler · Bobby Goodwin",
+        "system":   "Personify",
+        "color":    "#0F6E56",
+        "status": "validated",
+        "scores": {
+            "personify":   4,
+            "finys":              2,
+            "imageright":         0,
+            "ods":                2,
+            "netsuite":           1,
+            "hubspot":            2,
+            "nexsure":            0,
+            "countryway":         0,
+            "personify_finys_link": 3,
+            "oneinc":             2,
+        },
+        "notes": {
+            "personify":          {"pain": "~100k associate members with no policy tie-back; 70% of active members missing DOB; placeholder member IDs orphan policies; 8-hour manual billing run; undeleted data back to 1970s", "workaround": "Manual DOB backfill work (Jennifer McBride); placeholder IDs like 999999/000000 used as workaround", "data_gap": "No universal member ID; no household/relationship data model; no unified communication view"},
+            "finys":              {"pain": "Field changes in Personify impact FINYS downstream without clear rules", "workaround": "Manual coordination between field reps and policy services", "data_gap": "No confirmed clean linkage between Personify membership and FINYS policy records"},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Membership analytics degraded by upstream data quality gaps", "workaround": "Manual list pulls and Excel reconciliation", "data_gap": "Associate member ↔ policy linkage missing from ODS"},
+            "netsuite":           {"pain": "Member status cannot be validated during product purchases", "workaround": "Trust-based system — any membership ID accepted without validation", "data_gap": "No Personify ↔ NetSuite membership validation integration"},
+            "hubspot":            {"pain": "Member list data in HubSpot goes stale; no live sync from Personify", "workaround": "Marketing manually exports Personify lists into HubSpot before campaigns", "data_gap": "No real-time member data feed to HubSpot"},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Broken link means membership team cannot confirm which members hold active policies", "workaround": "Manual name/address matching", "data_gap": "~100k associate members with no confirmed policy tie-back"},
+            "oneinc":             {"pain": "Two parallel payment systems (One Inc and CyberSource) processing online membership payments", "workaround": "Manual reconciliation between payment systems", "data_gap": "No unified payment view across membership and insurance billing"},
+        },
+    },
+
+    # ── Marketing ─────────────────────────────────────────────────────────────
+    {
+        "id":       "marketing",
+        "role":     "Marketing",
+        "subtitle": "Kyle Shover · Mike Bolino · William Skorzyk",
+        "system":   "HubSpot + Personify + ODS",
+        "color":    "#854F0B",
+        "status":   "validated",
+        "scores": {
+            "personify":          3,
+            "finys":              1,
+            "imageright":         0,
+            "ods":                2,
+            "netsuite":           0,
+            "hubspot":            3,
+            "nexsure":            1,
+            "countryway":         0,
+            "personify_finys_link": 2,
+            "oneinc":             0,
+        },
+        "notes": {
+            "personify":          {"pain": "Demographic gaps (especially DOB) reduce lifecycle journey ability and analytics quality; list quality inconsistent", "workaround": "Manual list cleaning before campaigns", "data_gap": "No reliable segmentation data; householding limitations block family-based targeting"},
+            "finys":              {"pain": "No direct visibility into policy status for cross-sell targeting", "workaround": "", "data_gap": ""},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Data trust issues slow campaign decision-making; lead data from VFB.com not reliably feeding dashboards", "workaround": "Manual report wrangling before planning", "data_gap": "Quote lead ↔ member ↔ campaign attribution chain not connected"},
+            "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "Pilot with limited seats and read-only access to other systems; cannot serve as comprehensive CRM", "workaround": "Manual Personify list exports before every campaign; limited marketing automation capability", "data_gap": "No live integration between HubSpot and Personify or FINYS; no ODS feed"},
+            "nexsure":            {"pain": "Brokerage customer data invisible to marketing — no cross-sell visibility", "workaround": "", "data_gap": "15 years of brokerage history untracked at enterprise level"},
+            "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Cannot reliably target 'member with active policy' segment for renewal campaigns", "workaround": "Approximate targeting based on available Personify data only", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── Sales / Field Agents ──────────────────────────────────────────────────
+    {
+        "id":       "sales",
+        "role":     "Sales / Field Agents",
+        "subtitle": "Ray Leonard · Stacy Lister · County agents",
+        "system":   "FINYS + Personify + HubSpot",
+        "color":    "#185FA5",
+        "status": "validated",
+        "scores": {
+            "personify":          3,
+            "finys":              3,
+            "imageright":         1,
+            "ods":   4,
+            "netsuite":           0,
+            "hubspot":            2,
+            "nexsure":            3,
+            "countryway":         1,
+            "personify_finys_link": 3,
+            "oneinc":             0,
+        },
+        "notes": {
+            "personify":          {"pain": "Commission tracking for brokerage requires manual keying into Personify; orphaned records when agents leave", "workaround": "Manual entry of brokerage policy elements into Personify", "data_gap": "No systematic connection between brokerage policies and commission system"},
+            "finys":              {"pain": "No CRM pipeline or renewal visibility for agents; brokerage quoting requires full re-entry", "workaround": "Field agents maintain personal Excel spreadsheets for prospect tracking — lost when agent leaves", "data_gap": "No pipeline view; no renewal alerts; no cross-sell triggers"},
+            "imageright":         {"pain": "Agents originate requests but have limited visibility into workflow status", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Limited direct access; downstream pain from broken source linkage", "workaround": "", "data_gap": ""},
+            "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "Limited seats; not integrated with FINYS policy data so agents can't see full customer picture", "workaround": "Manual data assembly across systems before customer calls", "data_gap": "No unified agent view of member + policy + interaction history"},
+            "nexsure":            {"pain": "Brokerage quotes in Applied Rater require complete re-entry into FINYS (6–7 min quote + 2–3 min re-entry); no integration", "workaround": "Agents manually re-enter all customer data for every brokerage quote", "data_gap": "Applied Rater ↔ FINYS integration missing; 15 years of brokerage history untracked"},
+            "countryway":         {"pain": "Countryway agents use separate login and commission system", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Agents cannot confirm member/policy link during customer interactions", "workaround": "Manual name/address matching; sometimes bypass Personify entirely", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── Countryway Operations ─────────────────────────────────────────────────
+    {
+        "id":       "countryway_ops",
+        "role":     "Countryway Ops",
+        "subtitle": "Theresa Richardson · Paula Chavis · Sarah Person · Stacy Lister",
+        "system":   "AS400 + FINYS (migration)",
+        "color":    "#5F5E5A",
+        "status":   "validated",
+        "scores": {
+            "personify":          1,
+            "finys":              4,
+            "imageright":         2,
+            "ods":                3,
+            "netsuite":           1,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         4,
+            "personify_finys_link": 2,
+            "oneinc":             0,
+        },
+        "notes": {
+            "personify":          {"pain": "Limited use; some member record lookups", "workaround": "", "data_gap": ""},
+            "finys":              {"pain": "Mid-migration dual-system operation creates parallel workflows; policies must be entered in AS400 for billing AND separate system for deck pages", "workaround": "Shadow spreadsheets to track policy status; parallel workflows in AS400 and FINYS simultaneously", "data_gap": "No automated sync during migration; delivery governance gap — functionality shipped to prod without sign-off"},
+            "imageright":         {"pain": "Document storage for CW policies; some disconnects with workflow", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "No IS & EDM integration — no automated Countryway reporting; staff pull manual extracts for leadership visibility", "workaround": "Manual extracts; ~6 hrs/month for single incurred development report", "data_gap": "Countryway data not reliably flowing to ODS; reporting to leadership depends on manual pulls"},
+            "netsuite":           {"pain": "Some financial processing overlap", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "AS400 legacy system requires manual data entry for billing and policy processing; dual-entry across AS400 and deck page system; missing either step causes billing failure or customers not receiving documents", "workaround": "Staff manually enter policies into two systems; discovered only when customers call", "data_gap": "No integration between AS400 billing and deck page generation; no confirmed IS & EDM integration"},
+            "personify_finys_link": {"pain": "Migration further complicates the already-brittle nightly transfer", "workaround": "", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── IS / Data Services ────────────────────────────────────────────────────
+    {
+        "id":       "is_data",
+        "role":     "IS / Data Services",
+        "subtitle": "Jake Whitlow · Kim Boos · Jennifer McBride · Todd Cornell",
+        "system":   "ODS + Personify + FINYS",
+        "color":    "#534AB7",
+        "status": "validated",
+        "scores": {
+            "personify":          4,
+            "finys":              3,
+            "imageright":         1,
+            "ods":   4,
+            "netsuite":           2,
+            "hubspot":            1,
+            "nexsure":            2,
+            "countryway":         3,
+            "personify_finys_link": 4,
+            "oneinc":             1,
+        },
+        "notes": {
+            "personify":          {"pain": "No universal member ID; heavily customized outdated version; undeleted data back to 1970s; 70% of members missing DOB; 8-hour manual billing run; identity resolution gap unaddressed in current governance program", "workaround": "Manual DOB backfill; placeholder ID cleanup; governance program (Jake) addressing domain structure but not identity resolution", "data_gap": "Universal member ID does not exist; Personify ↔ FINYS linkage unconfirmed; no household/relationship model"},
+            "finys":              {"pain": "Central burden of data quality reconciliation and integration support; no API access for clean extraction", "workaround": "ODS extract via nightly file; shared DB workarounds", "data_gap": "No confirmed clean Personify ↔ FINYS member-policy linkage; no brokerage integration"},
+            "imageright":         {"pain": "Tool used alongside Personify but not integrated", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "ODS data unreliable due to upstream classification errors; hidden filters from past migrations cause payment data gaps and $100K+ discrepancies; 87/13 IS funding split favors insurance over membership projects", "workaround": "Actuarial and product teams maintain separate Excel models; claims manager manually pulls from 2–3 systems monthly", "data_gap": "ODS cannot serve as trusted reporting layer until upstream Personify ↔ FINYS identity gaps are resolved"},
+            "netsuite":           {"pain": "NetSuite ↔ FINYS reconciliation unclear; no confirmed integration path", "workaround": "Accounting manually reconciles NetSuite entries against FINYS billing extracts", "data_gap": "NetSuite ↔ Personify membership validation missing; no confirmed data lineage between finance and policy systems"},
+            "hubspot":            {"pain": "No ODS feed; no live Personify sync; governance blind spot", "workaround": "", "data_gap": "HubSpot operates outside IS governance scope"},
+            "nexsure":            {"pain": "Brokerage data invisible at enterprise level; 15 years of history untracked", "workaround": "Sales Analytics manually consolidates commission data from carrier portals via Excel", "data_gap": "No integration path from brokerage systems to IS & EDM layer"},
+            "countryway":         {"pain": "No IS & EDM integration for Countryway; mid-migration creates dual-system data quality risk", "workaround": "Manual extracts; parallel workflow tracking", "data_gap": "Countryway reporting not automated; migration governance gap (functionality shipped without sign-off)"},
+            "personify_finys_link": {"pain": "Nightly pipeline has no retry mechanism; failures create unrecoverable data gaps; no monitoring alerting on failure", "workaround": "Manual restart by Jennifer McBride; some data permanently lost", "data_gap": "Critical foundational gap: member-to-policy identity bridge is brittle, unmonitored, and unresolved in current governance program scope"},
+            "oneinc":             {"pain": "Two parallel payment systems (One Inc and CyberSource) not unified", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── Accounting / Products ─────────────────────────────────────────────────
+    {
+        "id":       "accounting",
+        "role":     "Accounting / Products",
+        "subtitle": "Jacki Picco · Jason Hart · Chuck Salerno · Bob Brown",
+        "system":   "NetSuite + FINYS + ODS",
+        "color":    "#0C447C",
+        "status":   "validated",
+        "scores": {
+            "personify":          2,
+            "finys":              2,
+            "imageright":         0,
+            "ods":                2,
+            "netsuite":           3,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         1,
+            "personify_finys_link": 1,
+            "oneinc":             2,
+        },
+        "notes": {
+            "personify":          {"pain": "No membership validation during product purchases; trust-based system accepts any member ID", "workaround": "Accept any membership ID without verification", "data_gap": "NetSuite ↔ Personify membership validation missing; member benefit usage untrackable"},
+            "finys":              {"pain": "FINYS billing data must be manually reconciled against NetSuite", "workaround": "Accounting manually reconciles NetSuite entries against FINYS billing extracts", "data_gap": "No confirmed NetSuite ↔ FINYS integration path"},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "ODS data unreliable for financial reporting; discrepancies up to $100Ks from hidden filters", "workaround": "Separate Excel models maintained by Actuarial/Product teams", "data_gap": ""},
+            "netsuite":           {"pain": "Central hub for products division but no integration with Personify or FINYS; Zone capture automates invoicing but overall reconciliation is manual", "workaround": "Accounting manually reconciles across systems; Zone capture handles some automation", "data_gap": "NetSuite ↔ Personify: no membership validation; NetSuite ↔ FINYS: reconciliation path unclear"},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "Some financial processing overlap with legacy stack", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Indirect impact via billing reconciliation", "workaround": "", "data_gap": ""},
+            "oneinc":             {"pain": "Two parallel payment systems (One Inc and CyberSource) require separate reconciliation", "workaround": "Manual reconciliation between payment systems", "data_gap": "No unified payment data view across membership and insurance billing"},
+        },
+    },
+
+    # ── Federation / Special Programs ────────────────────────────────────────
+    {
+        "id":       "federation",
+        "role":     "Federation / Special Programs",
+        "subtitle": "Kelly Roberts · Whitney Perkin · Josie · Bobby Goodwin · Kristi Murphy",
+        "system":   "Personify + OpenLink + OneCallNow",
+        "color":    "#166534",
+        "status":   "validated",
+        "scores": {
+            "personify":          3,
+            "finys":              1,
+            "imageright":         0,
+            "ods":                2,
+            "netsuite":           1,
+            "hubspot":            1,
+            "nexsure":            0,
+            "countryway":         0,
+            "personify_finys_link": 1,
+            "oneinc":             0,
+        },
+        "notes": {
+            "personify":          {"pain": "Demographic filtering (e.g. age, gender for Young Farmers/Women's Leadership) requires shadow spreadsheet maintained by Kelly Roberts; grain customers cannot be identified as Farm Bureau members; OpenLink fully siloed (~40 hrs/week manual data entry)", "workaround": "Shadow spreadsheets for demographic filtering; manual envelope labeling for grain payments", "data_gap": "No DOB/demographic completeness in Personify; grain customer ↔ VAFB member overlap unknown and unmapped"},
+            "finys":              {"pain": "Limited direct use in Federation workflows", "workaround": "", "data_gap": ""},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Grain division data (OpenLink) not flowing to any reporting layer; event data (Etix) not connected to membership analytics", "workaround": "Manual data consolidation", "data_gap": "OpenLink and OneCallNow not tracked in IS system inventory; no integration to ODS"},
+            "netsuite":           {"pain": "Grain accounting requires manual reformatting for NetSuite", "workaround": "Manual reformat for every transaction", "data_gap": "OpenLink ↔ NetSuite: no direct integration; no accounting automation for grain division"},
+            "hubspot":            {"pain": "No visibility into Federation program participants in marketing systems", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "Indirect — Federation programs need member validation that depends on this link", "workaround": "", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+]
 
 # ── KEY OBSERVATIONS ──────────────────────────────────────────────────────────
-# Edit these from the dashboard (Edit Mode → click ✏️ next to any observation)
-# or directly here. Add or remove items freely — the list updates automatically.
 OBSERVATIONS = [
-    "Example observations here",
+    "The Personify ↔ FINYS nightly link is the highest-severity cross-team gap — it is the root cause behind broken reporting, manual workarounds, and the inability to build a Member 360 view.",
+    "IS / Data Services and Membership carry the broadest system pain footprint — they are the internal integrators absorbing failure costs from every upstream gap.",
+    "Countryway / AS400 is a concentrated critical risk: dual-entry, no automated reporting, and mid-migration governance gaps compound simultaneously.",
+    "Marketing and Sales share a structural gap: neither HubSpot nor the brokerage stack (Nexsure) connects to the IS & EDM layer — limiting targeting, attribution, and renewal pipeline visibility.",
+    "ODS cannot be trusted as a reporting layer until the upstream Personify ↔ FINYS identity gap is resolved — hidden filters and classification errors propagate downstream into every leadership dashboard.",
+    "Federation and Accounting represent underserved verticals: OpenLink (grain) and NetSuite both lack integration to the core IS layer, creating silent data gaps not visible in existing governance programs.",
 ]
