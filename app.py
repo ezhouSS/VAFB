@@ -94,6 +94,13 @@ st.markdown("""
         min-height:62px !important; padding:10px 6px !important; cursor:pointer !important; width:100% !important;
     }
     .element-container:has(div[class^="cell-"]) + .element-container button:hover { filter:brightness(0.94) !important; }
+    /* Row-average uses a disabled button; keep it visually aligned with heat cells */
+    .element-container:has(div[class^="cell-"]) + .element-container button:disabled {
+        opacity: 1 !important;
+        cursor: default !important;
+        filter: none !important;
+    }
+    .element-container:has(div[class^="cell-"]) + .element-container button:disabled:hover { filter: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -427,24 +434,17 @@ for p in visible_personas:
                 args=(p["id"], s["id"]),
             )
 
-    # Row average
+    # Row average — same widget stack as heat cells (marker markdown + button) so tiles line up
     r_avg = avg_score(p["scores"])
-    if r_avg is None:
-        row_cols[-1].markdown(
-            "<div style='background:#F8FAF8;border:1.5px solid #D1D5DB;"
-            "border-radius:8px;text-align:center;padding:10px 4px;min-height:62px;"
-            "display:flex;align-items:center;justify-content:center;'>"
-            "<span style='font-size:14px;font-weight:800;color:#9CA3AF;font-style:italic;'>N/A</span></div>",
-            unsafe_allow_html=True
-        )
-    else:
-        h_avg = HEAT_COLORS[round(r_avg)]
-        row_cols[-1].markdown(
-            f"<div style='background:{h_avg['bg']};border:1.5px solid {h_avg['dot']};"
-            f"border-radius:8px;text-align:center;padding:10px 4px;min-height:62px;"
-            f"display:flex;align-items:center;justify-content:center;'>"
-            f"<span style='font-size:14px;font-weight:800;color:{h_avg['text']};'>{r_avg}</span></div>",
-            unsafe_allow_html=True
+    avg_heat = 0 if r_avg is None else max(0, min(4, int(round(r_avg))))
+    with row_cols[-1]:
+        st.markdown(f'<div class="cell-{avg_heat}"></div>', unsafe_allow_html=True)
+        st.button(
+            "N/A" if r_avg is None else str(r_avg),
+            key=f"hm_avg_{p['id']}",
+            use_container_width=True,
+            type="secondary",
+            disabled=True,
         )
     st.markdown("<div style='margin-bottom:4px;'></div>", unsafe_allow_html=True)
 
