@@ -795,7 +795,7 @@ with tab3:
         # Supporting systems — y=2.5
         ("ods",           "ODS",               "Reporting layer",                 1.2,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
         ("etix",          "Etix",              "Event ticketing",                 3.8,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
-        ("openlink",      "OpenLink",          "Grain operations",                6.2,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
+        ("agtech",      "Agtech",          "Grain operations",                6.2,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
         ("excel",         "Excel / manual",    "Shadow workarounds",              8.8,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
     ]
 
@@ -810,8 +810,8 @@ with tab3:
         ("finys",         "ods",        "Nightly policy / quote feed",            "working"),
         ("netsuite",      "personify",  "Missing: no membership validation",      "broken"),
         ("etix",          "personify",  "Missing: no real-time verification",     "broken"),
-        ("openlink",      "personify",  "Isolated: no corporate member tie",      "broken"),
-        ("openlink",      "finys",      "Isolated: no insurance / customer tie",  "broken"),
+        ("agtech",      "personify",  "Isolated: no corporate member tie",      "broken"),
+        ("agtech",      "finys",      "Isolated: no insurance / customer tie",  "broken"),
         ("agent",         "finys",      "Manual re-entry when lookup fails",      "manual"),
         ("etix",          "excel",      "Manual export / reconcile",              "manual"),
     ]
@@ -833,7 +833,7 @@ with tab3:
         "netsuite":      "Products division hub for inventory, pricing, and payment processing. No integration with Personify for membership validation — any ID accepted on trust.",
         "ods":           "Operational Data Store — reporting layer fed by FINYS nightly. Data trust issues due to upstream Personify ↔ FINYS identity gaps and hidden filters causing $100K+ discrepancies.",
         "etix":          "Third-party event ticketing platform. No real-time connection to Personify for membership verification. Post-event reconciliation requires manual CSV exports.",
-        "openlink":      "Grain merchandising system — fully siloed. No integration with Personify or FINYS. Grain customers cannot be identified as Farm Bureau members. ~40 hrs/week manual data entry burden.",
+        "agtech":      "Grain merchandising system — fully siloed. No integration with Personify or FINYS. Grain customers cannot be identified as Farm Bureau members. ~40 hrs/week manual data entry burden.",
         "excel":         "Shadow spreadsheets maintained across multiple teams: demographics filtering, agent prospect pipelines, Etix reconciliation exports. Prevalent across every interview group.",
     }
 
