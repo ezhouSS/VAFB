@@ -82,17 +82,18 @@ st.markdown("""
         color: #9CA3AF;
         font-weight: 400;
     }
-    .cell-0 + div button { background:#F8FAF8 !important; border:1.5px solid #D1D5DB !important; color:#9CA3AF !important; font-style:italic !important; }
-    .cell-1 + div button { background:#FEF9C3 !important; border:1.5px solid #FCD34D80 !important; color:#854D0E !important; }
-    .cell-2 + div button { background:#FED7AA !important; border:1.5px solid #FB923C80 !important; color:#9A3412 !important; }
-    .cell-3 + div button { background:#FECACA !important; border:1.5px solid #F8717180 !important; color:#7F1D1D !important; }
-    .cell-4 + div button { background:#FCA5A5 !important; border:1.5px solid #DC2626 !important; color:#450A0A !important; }
-    .cell-sel + div button { box-shadow:0 0 0 3px rgba(0,0,0,0.18) !important; border-width:2.5px !important; }
-    div[class^="cell-"] + div button, div[class*=" cell-"] + div button {
+    /* Heat cells use st.button; marker div lives in the prior element-container (Streamlit DOM). */
+    .element-container:has(.cell-0) + .element-container button { background:#F8FAF8 !important; border:1.5px solid #D1D5DB !important; color:#9CA3AF !important; font-style:italic !important; }
+    .element-container:has(.cell-1) + .element-container button { background:#FEF9C3 !important; border:1.5px solid #FCD34D80 !important; color:#854D0E !important; }
+    .element-container:has(.cell-2) + .element-container button { background:#FED7AA !important; border:1.5px solid #FB923C80 !important; color:#9A3412 !important; }
+    .element-container:has(.cell-3) + .element-container button { background:#FECACA !important; border:1.5px solid #F8717180 !important; color:#7F1D1D !important; }
+    .element-container:has(.cell-4) + .element-container button { background:#FCA5A5 !important; border:1.5px solid #DC2626 !important; color:#450A0A !important; }
+    .element-container:has(.cell-sel) + .element-container button { box-shadow:0 0 0 3px rgba(0,0,0,0.18) !important; border-width:2.5px !important; }
+    .element-container:has(div[class^="cell-"]) + .element-container button {
         border-radius:8px !important; font-size:13px !important; font-weight:700 !important;
         min-height:62px !important; padding:10px 6px !important; cursor:pointer !important; width:100% !important;
     }
-    div[class^="cell-"] + div button:hover { filter:brightness(0.94) !important; }
+    .element-container:has(div[class^="cell-"]) + .element-container button:hover { filter:brightness(0.94) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -246,6 +247,21 @@ def build_dataframe():
     return pd.DataFrame(rows)
 
 
+def _toggle_heatmap_cell(persona_id, stage_id):
+    cur = st.session_state.get("selected_cell")
+    if (
+        cur
+        and cur.get("persona_id") == persona_id
+        and cur.get("stage_id") == stage_id
+    ):
+        st.session_state["selected_cell"] = None
+    else:
+        st.session_state["selected_cell"] = {
+            "persona_id": persona_id,
+            "stage_id": stage_id,
+        }
+
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
@@ -356,21 +372,6 @@ header_cols[-1].markdown(
 )
 st.markdown("<hr style='margin:4px 0 8px;border-color:#E5E5E0;'>", unsafe_allow_html=True)
 
-# ── Handle query-param cell clicks ───────────────────────────────────────────
-qp = st.query_params.get("sel", None)
-if qp:
-    if st.session_state.get("selected_cell") and (
-        st.session_state["selected_cell"]["persona_id"] + "__" +
-        st.session_state["selected_cell"]["stage_id"] == qp
-    ):
-        st.session_state["selected_cell"] = None
-    else:
-        parts = qp.split("__", 1)
-        if len(parts) == 2:
-            st.session_state["selected_cell"] = {"persona_id": parts[0], "stage_id": parts[1]}
-    st.query_params.clear()
-    st.rerun()
-
 selected_cell = st.session_state.get("selected_cell", None)
 
 for p in visible_personas:
@@ -410,30 +411,21 @@ for p in visible_personas:
         )
         warn       = "⚠ " if score == 4 else ""
         cell_label = h["label"] if score > 0 else "N/A"
-        sel_border = f"2.5px solid {p_color}" if is_selected else f"1.5px solid {h['dot']}80"
-        sel_shadow = f"0 0 0 3px {p_color}30" if is_selected else "none"
-        txt_color  = "#9CA3AF" if score == 0 else h["text"]
-        font_style = "italic" if score == 0 else "normal"
-        qp_val     = f"{p['id']}__{s['id']}"
-
-        # Single styled <a> tag — no button, no ghost, full color control
-        row_cols[i + 1].markdown(
-            f"<a href='?sel={qp_val}' target='_self' style='"
-            f"display:flex;align-items:center;justify-content:center;"
-            f"background:{h['bg']};"
-            f"border:{sel_border};"
-            f"border-radius:8px;"
-            f"box-shadow:{sel_shadow};"
-            f"min-height:62px;"
-            f"padding:10px 6px;"
-            f"text-decoration:none;"
-            f"cursor:pointer;"
-            f"font-size:13px;font-weight:700;"
-            f"color:{txt_color};"
-            f"font-style:{font_style};"
-            f"'>{warn}{cell_label}</a>",
-            unsafe_allow_html=True
-        )
+        # st.button + on_click: avoids ?query= navigation (full page load) and extra st.rerun().
+        with row_cols[i + 1]:
+            sel_cls = " cell-sel" if is_selected else ""
+            st.markdown(
+                f'<div class="cell-{score}{sel_cls}"></div>',
+                unsafe_allow_html=True,
+            )
+            st.button(
+                f"{warn}{cell_label}",
+                key=f"hm_{p['id']}_{s['id']}",
+                use_container_width=True,
+                type="secondary",
+                on_click=_toggle_heatmap_cell,
+                args=(p["id"], s["id"]),
+            )
 
     # Row average
     r_avg = avg_score(p["scores"])

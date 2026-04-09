@@ -108,9 +108,9 @@ PERSONAS = [
         "subtitle": "Ben Ashby · Scott Denoon · Ed Baumgartner",
         "system":   "FINYS + Personify + ImageRight",
         "color":    "#993C1D",
-        "status":   "validated",
+        "status": "validated",
         "scores": {
-            "personify":          3,
+            "personify":   3,
             "finys":              3,
             "imageright":         2,
             "ods":                2,
@@ -125,7 +125,7 @@ PERSONAS = [
             "etix":               0,
         },
         "notes": {
-            "personify":          {"pain": "Major demographic gaps (DOB often missing/wrong); householding limitations block cross-sell and family-based journeys", "workaround": "Manual lookup and data patching across systems", "data_gap": "No reliable member profile to anchor underwriting decisions; member ↔ policyholder link unconfirmed"},
+            "personify": {"pain": "Major demographic gaps (DOB often missing/wrong); householding limitations block cross-sell and family-based journeys", "workaround": "Manual lookup and data patching across systems", "data_gap": "No reliable member profile to anchor underwriting decisions; member ↔ policyholder link unconfirmed"},
             "finys":              {"pain": "Staff must jump across 2–3 systems to assemble member/policy/loss/payment context", "workaround": "Manual toggling between FINYS and ImageRight; rekeying increases errors", "data_gap": "No single system surfaces complete policy + customer + loss context together"},
             "imageright":         {"pain": "Paper intake dependency creates delays; fragmented documentation slows complete file assembly", "workaround": "Scanning/indexing team acts as bottleneck; manual routing", "data_gap": "Document context not surfaced natively in FINYS — requires manual cross-reference"},
             "ods":                {"pain": "Data trust issues when source systems don't link cleanly", "workaround": "Manual report wrangling", "data_gap": "ODS reports have hidden filters from past migrations; payment data missing"},
