@@ -167,7 +167,18 @@ def save_cell(persona_id, stage_id, new_score, new_pain, new_workaround, new_dat
 
         if in_notes and not in_target_note:
             if re.match(r'\s*"' + re.escape(stage_id) + r'"\s*:', line):
-                in_target_note = True
+                # data.py stores each stage note as a single-line dict.
+                # Rewrite that entire line so edits always persist.
+                indent = len(line) - len(line.lstrip())
+                esc_pain = new_pain.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+                esc_work = new_workaround.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+                esc_gap  = new_datagap.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+                new_lines.append(
+                    " " * indent
+                    + f'"{stage_id}": {{"pain": "{esc_pain}", "workaround": "{esc_work}", "data_gap": "{esc_gap}"}},\n'
+                )
+                i += 1
+                continue
             new_lines.append(line)
             i += 1
             continue
