@@ -81,6 +81,21 @@ STAGES = [
         "label": "One Inc",
         "desc":  "Payment provider · billing integration · reconciliation",
     },
+    {
+        "id":    "salesforce",
+        "label": "Salesforce",
+        "desc":  "Healthcare CRM · EBCA admin · health insurance ops",
+    },
+    {
+        "id":    "openlink",
+        "label": "OpenLink",
+        "desc":  "Grain merchandising · commodity trading · isolated silo",
+    },
+    {
+        "id":    "etix",
+        "label": "Etix / Events",
+        "desc":  "Event ticketing · venue ops · demographic reporting",
+    },
 ]
 
 # ── PERSONAS / TEAMS (Y axis) ─────────────────────────────────────────────────
@@ -105,6 +120,9 @@ PERSONAS = [
             "countryway":         1,
             "personify_finys_link": 4,
             "oneinc":             1,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Major demographic gaps (DOB often missing/wrong); householding limitations block cross-sell and family-based journeys", "workaround": "Manual lookup and data patching across systems", "data_gap": "No reliable member profile to anchor underwriting decisions; member ↔ policyholder link unconfirmed"},
@@ -116,9 +134,13 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "Minor legacy dependency for some policy lookups", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Nightly pipeline failures have no retry — missed transfers create persistent data gaps requiring manual cleanup", "workaround": "Data analysts manually restart failed processes; some data permanently lost", "data_gap": "Breaks customer ↔ policy linkage; worsens reconciliation and reporting effort"},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "Payment visibility gaps force extra manual lookups", "workaround": "Manual reconciliation against policy + customer context", "data_gap": ""},
         },
     },
+
 
     # ── Claims ────────────────────────────────────────────────────────────────
     {
@@ -139,6 +161,9 @@ PERSONAS = [
             "countryway":         1,
             "personify_finys_link": 3,
             "oneinc":             1,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Contact data often 5+ years out of date; no integration to claims vendor systems", "workaround": "Claimant Locator used as fallback — two separate unlinked systems", "data_gap": "No unified claimant contact view; Personify and Claimant Locator not integrated"},
@@ -150,9 +175,13 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "Farm claims still touch legacy stack", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Broken linkage means claims staff cannot confirm customer identity reliably", "workaround": "Manual name/address matching", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "Payment reconciliation gaps add manual overhead", "workaround": "", "data_gap": ""},
         },
     },
+
 
     # ── Policy Services ───────────────────────────────────────────────────────
     {
@@ -173,6 +202,9 @@ PERSONAS = [
             "countryway":         2,
             "personify_finys_link": 4,
             "oneinc":             2,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Member record often incomplete; agents bypass Personify entirely when MSS staff unavailable", "workaround": "Agents hand-type all customer data directly into FINYS; MSS creates Personify record later", "data_gap": "Parallel records that may never be reconciled; duplicate customer entries"},
@@ -184,9 +216,13 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "Dual-entry burden during migration; AS400 billing vs. deck page system require separate entries", "workaround": "Staff manually enter policies into two systems; missing either step creates billing or documentation failure", "data_gap": "No automated sync between legacy billing and deck page generation"},
             "personify_finys_link": {"pain": "Nightly pipeline failures create unrecoverable data gaps without manual intervention", "workaround": "Data analysts manually restart; some data permanently lost", "data_gap": "Critical: identity bridge between member and policy records is brittle and unmonitored"},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "Payment visibility gaps require extra lookups; reconciliation not unified with policy context", "workaround": "Manual reconciliation", "data_gap": ""},
         },
     },
+
 
     # ── Membership & Field Services ───────────────────────────────────────────
     {
@@ -195,9 +231,9 @@ PERSONAS = [
         "subtitle": "Matt Knuckles · Karen Smith · Daryl Butler · Bobby Goodwin",
         "system":   "Personify",
         "color":    "#0F6E56",
-        "status": "validated",
+        "status":   "validated",
         "scores": {
-            "personify":   4,
+            "personify":          4,
             "finys":              2,
             "imageright":         0,
             "ods":                2,
@@ -207,6 +243,9 @@ PERSONAS = [
             "countryway":         0,
             "personify_finys_link": 3,
             "oneinc":             2,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "~100k associate members with no policy tie-back; 70% of active members missing DOB; placeholder member IDs orphan policies; 8-hour manual billing run; undeleted data back to 1970s", "workaround": "Manual DOB backfill work (Jennifer McBride); placeholder IDs like 999999/000000 used as workaround", "data_gap": "No universal member ID; no household/relationship data model; no unified communication view"},
@@ -218,9 +257,13 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Broken link means membership team cannot confirm which members hold active policies", "workaround": "Manual name/address matching", "data_gap": "~100k associate members with no confirmed policy tie-back"},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "Two parallel payment systems (One Inc and CyberSource) processing online membership payments", "workaround": "Manual reconciliation between payment systems", "data_gap": "No unified payment view across membership and insurance billing"},
         },
     },
+
 
     # ── Marketing ─────────────────────────────────────────────────────────────
     {
@@ -241,6 +284,9 @@ PERSONAS = [
             "countryway":         0,
             "personify_finys_link": 2,
             "oneinc":             0,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Demographic gaps (especially DOB) reduce lifecycle journey ability and analytics quality; list quality inconsistent", "workaround": "Manual list cleaning before campaigns", "data_gap": "No reliable segmentation data; householding limitations block family-based targeting"},
@@ -252,9 +298,13 @@ PERSONAS = [
             "nexsure":            {"pain": "Brokerage customer data invisible to marketing — no cross-sell visibility", "workaround": "", "data_gap": "15 years of brokerage history untracked at enterprise level"},
             "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Cannot reliably target 'member with active policy' segment for renewal campaigns", "workaround": "Approximate targeting based on available Personify data only", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
         },
     },
+
 
     # ── Sales / Field Agents ──────────────────────────────────────────────────
     {
@@ -263,32 +313,39 @@ PERSONAS = [
         "subtitle": "Ray Leonard · Stacy Lister · County agents",
         "system":   "FINYS + Personify + HubSpot",
         "color":    "#185FA5",
-        "status": "validated",
+        "status":   "validated",
         "scores": {
             "personify":          3,
             "finys":              3,
             "imageright":         1,
-            "ods":   4,
+            "ods":                1,
             "netsuite":           0,
             "hubspot":            2,
             "nexsure":            3,
             "countryway":         1,
             "personify_finys_link": 3,
             "oneinc":             0,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Commission tracking for brokerage requires manual keying into Personify; orphaned records when agents leave", "workaround": "Manual entry of brokerage policy elements into Personify", "data_gap": "No systematic connection between brokerage policies and commission system"},
             "finys":              {"pain": "No CRM pipeline or renewal visibility for agents; brokerage quoting requires full re-entry", "workaround": "Field agents maintain personal Excel spreadsheets for prospect tracking — lost when agent leaves", "data_gap": "No pipeline view; no renewal alerts; no cross-sell triggers"},
             "imageright":         {"pain": "Agents originate requests but have limited visibility into workflow status", "workaround": "", "data_gap": ""},
-            "ods": {"pain": "- **Reports don’t reliably include key fields they need** (e.g., county, district, region), so they end up doing **manual lookups and stitching** across outputs.[[1]](https://www.notion.so/Sales-Reporting-33cce2834b3c80439f31eeea8e13cbe9?pvs=21)\n- **Report output formatting is not analysis-friendly** (built for printing): merged cells (can’t sort), lots of hidden/dead columns, and inconsistent exports that require cleanup before use.[[1]](https://www.notion.so/Sales-Reporting-33cce2834b3c80439f31eeea8e13cbe9?pvs=21)\n- **Identifier/data cleanliness issues** break matching across reports:\n    - Member numbers come with extra characters/spaces → they have to truncate/normalize for joins.[[1]](https://www.notion.so/Sales-Reporting-33cce2834b3c80439f31eeea8e13cbe9?pvs=21)\n    - Customer names appear in different formats across systems (Nick vs. Nicholas, spacing differences), making reconciliation harder.[[1]](https://www.notion.so/Sales-Reporting-33cce2834b3c80439f31eeea8e13cbe9?pvs=21)\n- **Historical/time slicing limitations**: for some reporting they can only pull complete months after close (not arbitrary date ranges), and trend views require manual navigation month-by-month.[[1]](https://www.notion.so/Sales-Reporting-33cce2834b3c80439f31eeea8e13cbe9?pvs=21)\n- **Biggest operational burden is validation**, not calculation: agents frequently question their numbers, and Sales Reporting spends time researching/explaining ODS-derived results (especially around “effective date” rules, and near contest deadlines).[[1]](https://www.notion.so/Sales-Reporting-33cce2834b3c80439f31eeea8e13cbe9?pvs=21)", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Limited direct access; downstream pain from broken source linkage", "workaround": "", "data_gap": ""},
             "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
             "hubspot":            {"pain": "Limited seats; not integrated with FINYS policy data so agents can't see full customer picture", "workaround": "Manual data assembly across systems before customer calls", "data_gap": "No unified agent view of member + policy + interaction history"},
             "nexsure":            {"pain": "Brokerage quotes in Applied Rater require complete re-entry into FINYS (6–7 min quote + 2–3 min re-entry); no integration", "workaround": "Agents manually re-enter all customer data for every brokerage quote", "data_gap": "Applied Rater ↔ FINYS integration missing; 15 years of brokerage history untracked"},
             "countryway":         {"pain": "Countryway agents use separate login and commission system", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Agents cannot confirm member/policy link during customer interactions", "workaround": "Manual name/address matching; sometimes bypass Personify entirely", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
         },
     },
+
 
     # ── Countryway Operations ─────────────────────────────────────────────────
     {
@@ -309,6 +366,9 @@ PERSONAS = [
             "countryway":         4,
             "personify_finys_link": 2,
             "oneinc":             0,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Limited use; some member record lookups", "workaround": "", "data_gap": ""},
@@ -320,9 +380,13 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "AS400 legacy system requires manual data entry for billing and policy processing; dual-entry across AS400 and deck page system; missing either step causes billing failure or customers not receiving documents", "workaround": "Staff manually enter policies into two systems; discovered only when customers call", "data_gap": "No integration between AS400 billing and deck page generation; no confirmed IS & EDM integration"},
             "personify_finys_link": {"pain": "Migration further complicates the already-brittle nightly transfer", "workaround": "", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
         },
     },
+
 
     # ── IS / Data Services ────────────────────────────────────────────────────
     {
@@ -331,18 +395,21 @@ PERSONAS = [
         "subtitle": "Jake Whitlow · Kim Boos · Jennifer McBride · Todd Cornell",
         "system":   "ODS + Personify + FINYS",
         "color":    "#534AB7",
-        "status": "validated",
+        "status":   "validated",
         "scores": {
             "personify":          4,
             "finys":              3,
             "imageright":         1,
-            "ods":   4,
+            "ods":                4,
             "netsuite":           2,
             "hubspot":            1,
             "nexsure":            2,
             "countryway":         3,
             "personify_finys_link": 4,
             "oneinc":             1,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "No universal member ID; heavily customized outdated version; undeleted data back to 1970s; 70% of members missing DOB; 8-hour manual billing run; identity resolution gap unaddressed in current governance program", "workaround": "Manual DOB backfill; placeholder ID cleanup; governance program (Jake) addressing domain structure but not identity resolution", "data_gap": "Universal member ID does not exist; Personify ↔ FINYS linkage unconfirmed; no household/relationship model"},
@@ -354,9 +421,13 @@ PERSONAS = [
             "nexsure":            {"pain": "Brokerage data invisible at enterprise level; 15 years of history untracked", "workaround": "Sales Analytics manually consolidates commission data from carrier portals via Excel", "data_gap": "No integration path from brokerage systems to IS & EDM layer"},
             "countryway":         {"pain": "No IS & EDM integration for Countryway; mid-migration creates dual-system data quality risk", "workaround": "Manual extracts; parallel workflow tracking", "data_gap": "Countryway reporting not automated; migration governance gap (functionality shipped without sign-off)"},
             "personify_finys_link": {"pain": "Nightly pipeline has no retry mechanism; failures create unrecoverable data gaps; no monitoring alerting on failure", "workaround": "Manual restart by Jennifer McBride; some data permanently lost", "data_gap": "Critical foundational gap: member-to-policy identity bridge is brittle, unmonitored, and unresolved in current governance program scope"},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "Two parallel payment systems (One Inc and CyberSource) not unified", "workaround": "", "data_gap": ""},
         },
     },
+
 
     # ── Accounting / Products ─────────────────────────────────────────────────
     {
@@ -377,6 +448,9 @@ PERSONAS = [
             "countryway":         1,
             "personify_finys_link": 1,
             "oneinc":             2,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "No membership validation during product purchases; trust-based system accepts any member ID", "workaround": "Accept any membership ID without verification", "data_gap": "NetSuite ↔ Personify membership validation missing; member benefit usage untrackable"},
@@ -388,9 +462,13 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "Some financial processing overlap with legacy stack", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Indirect impact via billing reconciliation", "workaround": "", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "Two parallel payment systems (One Inc and CyberSource) require separate reconciliation", "workaround": "Manual reconciliation between payment systems", "data_gap": "No unified payment data view across membership and insurance billing"},
         },
     },
+
 
     # ── Federation / Special Programs ────────────────────────────────────────
     {
@@ -411,6 +489,9 @@ PERSONAS = [
             "countryway":         0,
             "personify_finys_link": 1,
             "oneinc":             0,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               0,
         },
         "notes": {
             "personify":          {"pain": "Demographic filtering (e.g. age, gender for Young Farmers/Women's Leadership) requires shadow spreadsheet maintained by Kelly Roberts; grain customers cannot be identified as Farm Bureau members; OpenLink fully siloed (~40 hrs/week manual data entry)", "workaround": "Shadow spreadsheets for demographic filtering; manual envelope labeling for grain payments", "data_gap": "No DOB/demographic completeness in Personify; grain customer ↔ VAFB member overlap unknown and unmapped"},
@@ -422,7 +503,129 @@ PERSONAS = [
             "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
             "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
             "personify_finys_link": {"pain": "Indirect — Federation programs need member validation that depends on this link", "workaround": "", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
             "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+    # ── Healthcare ────────────────────────────────────────────────────────────
+    {
+        "id":       "healthcare",
+        "role":     "Healthcare",
+        "subtitle": "EBCA · Health Insurance Solutions",
+        "system":   "Salesforce",
+        "color":    "#0891B2",
+        "status":   "hypothesis",
+        "scores": {
+            "personify":          1,
+            "finys":              0,
+            "imageright":         0,
+            "ods":                1,
+            "netsuite":           0,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         0,
+            "personify_finys_link": 0,
+            "oneinc":             0,
+            "salesforce":         3,
+            "openlink":           0,
+            "etix":               0,
+        },
+        "notes": {
+            "personify":          {"pain": "No named data owner or confirmed system integration for HEA/healthcare cluster — open governance gap", "workaround": "Manual coordination with membership team", "data_gap": "Healthcare CRM (Salesforce) not connected to VAFB member record; no cross-sell or unified member view"},
+            "finys":              {"pain": "", "workaround": "", "data_gap": ""},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Healthcare data not flowing to ODS or any enterprise reporting layer", "workaround": "Standalone Salesforce reporting only", "data_gap": "Healthcare engagement and enrollment data invisible at enterprise level"},
+            "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "", "workaround": "", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+            "salesforce":         {"pain": "Salesforce operates as a fully siloed CRM for healthcare administration with no integration to VAFB core systems. EBCA and Health Insurance Solutions have no confirmed data owner or governance structure.", "workaround": "Separate Salesforce instance maintained independently from IS & EDM governance", "data_gap": "No integration path between Salesforce and Personify, FINYS, or ODS; healthcare members invisible to enterprise reporting"},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── Grain Operations ─────────────────────────────────────────────────────
+    {
+        "id":       "grain",
+        "role":     "Grain Operations",
+        "subtitle": "Josie Moore · Robert Harper",
+        "system":   "OpenLink",
+        "color":    "#854F0B",
+        "status":   "validated",
+        "scores": {
+            "personify":          2,
+            "finys":              0,
+            "imageright":         0,
+            "ods":                2,
+            "netsuite":           2,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         0,
+            "personify_finys_link": 0,
+            "oneinc":             0,
+            "salesforce":         0,
+            "openlink":           4,
+            "etix":               0,
+        },
+        "notes": {
+            "personify":          {"pain": "Grain customers cannot be identified as Farm Bureau members — no linkage between OpenLink and Personify", "workaround": "Manual envelope labeling for grain payment checks; no automated member lookup", "data_gap": "Grain customer overlap with VAFB members unknown and unmapped"},
+            "finys":              {"pain": "", "workaround": "", "data_gap": ""},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Grain division data (OpenLink) not flowing to any reporting layer", "workaround": "Manual data consolidation from OpenLink only", "data_gap": "OpenLink not tracked in IS system inventory; no integration to ODS"},
+            "netsuite":           {"pain": "Grain accounting requires manual reformatting for every transaction before NetSuite entry", "workaround": "Staff manually reformat every grain transaction", "data_gap": "OpenLink ↔ NetSuite: no direct integration; no accounting automation"},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "", "workaround": "", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "OpenLink grain merchandising system operates in complete isolation from all VAFB corporate systems. ~40 hrs/week of manual data entry by two staff. No integration with Personify, FINYS, NetSuite, or ODS. Payments require manual envelope labeling.", "workaround": "Manual data entry for every transaction; manual reformatting for accounting; manual payment processing", "data_gap": "OpenLink fully siloed — grain customer records and financial data invisible to enterprise systems"},
+            "etix":               {"pain": "", "workaround": "", "data_gap": ""},
+        },
+    },
+
+    # ── Meadow Event Farm ─────────────────────────────────────────────────────
+    {
+        "id":       "meadow",
+        "role":     "Meadow Event Farm",
+        "subtitle": "Marlene Pierson-Jolliffe",
+        "system":   "Etix + POS",
+        "color":    "#166534",
+        "status":   "validated",
+        "scores": {
+            "personify":          2,
+            "finys":              0,
+            "imageright":         0,
+            "ods":                1,
+            "netsuite":           1,
+            "hubspot":            0,
+            "nexsure":            0,
+            "countryway":         0,
+            "personify_finys_link": 0,
+            "oneinc":             0,
+            "salesforce":         0,
+            "openlink":           0,
+            "etix":               3,
+        },
+        "notes": {
+            "personify":          {"pain": "Etix ticketing cannot verify Farm Bureau membership in real time — member discounts applied on trust", "workaround": "Manual export of discount usage for post-event verification", "data_gap": "No real-time membership validation at ticket purchase; event attendance invisible to Personify"},
+            "finys":              {"pain": "", "workaround": "", "data_gap": ""},
+            "imageright":         {"pain": "", "workaround": "", "data_gap": ""},
+            "ods":                {"pain": "Event attendance and sales data not connected to enterprise reporting", "workaround": "Standalone Etix reporting; manual consolidation for corporate reporting", "data_gap": "170-180 annual events and ~500k visitors not tracked in enterprise reporting"},
+            "netsuite":           {"pain": "Food and beverage POS requires manual data consolidation for accounting", "workaround": "Manual export from POS to third-party auditor then spreadsheets", "data_gap": "POS sales data not integrated with NetSuite or enterprise financial reporting"},
+            "hubspot":            {"pain": "", "workaround": "", "data_gap": ""},
+            "nexsure":            {"pain": "", "workaround": "", "data_gap": ""},
+            "countryway":         {"pain": "", "workaround": "", "data_gap": ""},
+            "personify_finys_link": {"pain": "", "workaround": "", "data_gap": ""},
+            "oneinc":             {"pain": "", "workaround": "", "data_gap": ""},
+            "salesforce":         {"pain": "", "workaround": "", "data_gap": ""},
+            "openlink":           {"pain": "", "workaround": "", "data_gap": ""},
+            "etix":               {"pain": "Etix has no real-time connection to Personify for membership verification. 170-180 events annually with ~500k visitors. Member discounts cannot be verified at point of purchase. Third-party booking software creates additional manual reconciliation.", "workaround": "Post-event manual export and reconciliation; food/beverage POS goes through third-party auditing before spreadsheets", "data_gap": "Etix ↔ Personify: no integration; event attendance and membership discount usage invisible to enterprise systems"},
         },
     },
 ]
