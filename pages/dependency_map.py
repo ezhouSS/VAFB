@@ -93,26 +93,23 @@ SYS_LOOKUP["first_call"]       = {**_vendor_proxy, "id": "first_call",
 _ext_proxy = {"severity": 2, "owner": "Underwriting / 3rd party", "known_gaps": [], "workarounds": []}
 SYS_LOOKUP["lexisnexis"]       = {**_ext_proxy, "id": "lexisnexis",
                                     "name": "LexisNexis", "category": "External Data Provider"}
-
 # Team → systems they depend on
+# Source: data.py PERSONAS — systems with score > 0, mapped to dependency map node IDs
+# Averages: non-zero scores only (matches heat map display)
 TEAM_SYSTEM_DEPS = [
-    # (team_name, [system_ids_they_depend_on], approx_headcount)
-    ("Underwriting",          ["finys", "ods", "imageright", "lexisnexis"],             15),
-    ("Claims",                ["finys", "imageright", "ods", "claimant_locator"],       10),
-    ("Policy Services",       ["finys"],                                                  8),
-    ("Marketing",             ["hubspot", "personify", "ods"],                           8),
-    ("Sales / Field Agents",  ["hubspot", "finys", "personify"],                         5),
-    ("Field Services",        ["personify"],                                              6),
-    ("Membership / Comms",    ["personify"],                                              8),
-    ("Accounting / Finance",  ["netsuite", "finys"],                                    6),
-    ("Data / Analytics",      ["ods", "personify", "finys"],                            4),
-    ("Product / Actuarial",   ["ods"],                                                   4),
-    ("Countryway Ops",        ["countryway", "finys"],                                 15),
-    ("Fundraising",           ["personify"],                                             2),
-    # New from Round 4
-    ("IAS Brokerage",         ["nexsure", "applied_rater", "carrier_portals", "personify"], 6),
-    ("Sales Analytics",       ["ods", "finys"],                                          3),
-    ("Training",              ["finys", "personify"],                                    5),
+    ("Underwriting",               ["personify", "finys", "imageright", "ods", "countryway"],                                          15),
+    ("Claims",                     ["personify", "finys", "imageright", "ods", "countryway", "claimant_locator"],                      10),
+    ("Policy Services",            ["personify", "finys", "imageright", "ods", "countryway"],                                           8),
+    ("Membership & Field Services",["personify", "finys", "ods", "netsuite", "hubspot"],                                                8),
+    ("Marketing",                  ["personify", "finys", "ods", "hubspot", "nexsure"],                                                 8),
+    ("Sales / Field Agents",       ["personify", "finys", "imageright", "ods", "hubspot", "nexsure", "countryway"],                     5),
+    ("Countryway Ops",             ["personify", "finys", "imageright", "ods", "netsuite", "countryway"],                              15),
+    ("IS / Data Services",         ["personify", "finys", "imageright", "ods", "netsuite", "hubspot", "nexsure", "countryway"],         4),
+    ("Accounting / Products",      ["personify", "finys", "ods", "netsuite", "countryway"],                                             6),
+    ("Federation / Special Programs",["personify", "finys", "ods", "netsuite", "hubspot"],                                              2),
+    ("Healthcare",                 ["personify", "ods"],                                                                                 3),
+    ("Grain Operations",           ["personify", "ods", "netsuite"],                                                                    2),
+    ("Meadow Event Farm",          ["personify", "ods", "netsuite"],                                                                    2),
 ]
 
 # Workaround → upstream root cause system
@@ -384,9 +381,62 @@ with tab1:
     NODE_TRACE_IDX = {}
     W, H = 2.2, 0.75
 
-    # ── Session state for selected node ────────────────────────────────────
+    # ── Session state ──────────────────────────────────────────────────────
     if "selected_node" not in st.session_state:
         st.session_state.selected_node = None
+    if "selected_team" not in st.session_state:
+        st.session_state.selected_team = None
+
+    # ── Team filter UI ─────────────────────────────────────────────────────
+    # Build lookup: team name → system ids
+    TEAM_DEPS_MAP = {t: set(deps) for t, deps, _ in TEAM_SYSTEM_DEPS}
+    # Pain averages: non-zero scores only, sourced directly from data.py PERSONAS
+    TEAM_PAIN_AVG = {
+        "Underwriting":                 2.29,
+        "Claims":                       2.14,
+        "Policy Services":              2.43,
+        "Membership & Field Services":  2.43,
+        "Marketing":                    2.0,
+        "Sales / Field Agents":         2.12,
+        "Countryway Ops":               2.43,
+        "IS / Data Services":           2.5,
+        "Accounting / Products":        1.86,
+        "Federation / Special Programs":1.5,
+        "Healthcare":                   1.67,
+        "Grain Operations":             2.5,
+        "Meadow Event Farm":            1.75,
+    }
+
+    col_filter, col_clear = st.columns([5, 1])
+    with col_filter:
+        sorted_teams = sorted(TEAM_DEPS_MAP.keys(), key=lambda t: -TEAM_PAIN_AVG.get(t, 0))
+        team_options = ["— All systems —"] + sorted_teams
+        current_team = st.session_state.selected_team
+        default_idx  = team_options.index(current_team) if current_team in team_options else 0
+        chosen = st.selectbox(
+            "Filter by team",
+            options=team_options,
+            index=default_idx,
+            key="team_selectbox",
+            help="Ranked high to low by avg pain score. Highlight only the systems this team depends on.",
+            format_func=lambda t: t if t.startswith("—") else f"{t}  [avg {TEAM_PAIN_AVG.get(t, '—')}]",
+        )
+    with col_clear:
+        st.write("")  # vertical align
+        if st.button("✕ Clear", key="clear_team_filter", use_container_width=True):
+            st.session_state.selected_team = None
+            st.session_state.selected_node = None
+            st.rerun()
+
+    # Sync selectbox → session state
+    new_team = None if chosen.startswith("—") else chosen
+    if new_team != st.session_state.selected_team:
+        st.session_state.selected_team  = new_team
+        st.session_state.selected_node  = None   # reset node selection when team changes
+        st.rerun()
+
+    sel_team  = st.session_state.selected_team
+    sel_nodes = TEAM_DEPS_MAP.get(sel_team, set()) if sel_team else set()
 
     sel = st.session_state.selected_node
 
@@ -399,6 +449,28 @@ with tab1:
         return connected
 
     related = related_nodes(sel) if sel else set()
+
+    # Active highlight set: team filter takes precedence over node click
+    # if both are set, intersect (show team systems + clicked node's neighbours)
+    def _is_active(nid):
+        if sel_team and sel:
+            return nid in sel_nodes or nid == sel or nid in related
+        if sel_team:
+            return nid in sel_nodes
+        if sel:
+            return nid == sel or nid in related
+        return True  # no filter
+
+    def _edge_active(src, tgt):
+        if sel_team and sel:
+            team_edge   = src in sel_nodes and tgt in sel_nodes
+            node_edge   = src == sel or tgt == sel
+            return team_edge or node_edge
+        if sel_team:
+            return src in sel_nodes and tgt in sel_nodes
+        if sel:
+            return src == sel or tgt == sel
+        return True  # no filter
 
     # ── Build figure ───────────────────────────────────────────────────────
     shapes, annotations, traces = [], [], []
@@ -451,18 +523,17 @@ with tab1:
         cx1 = NODE_POS[tgt][0] + tw / 2
         cy1 = NODE_POS[tgt][1] + th / 2
 
-        if sel is None:
-            color = "#22c55e" if confirmed else "#e53935"
-            width = 2 if confirmed else 1.5
-            opacity = 1.0
-        elif src == sel or tgt == sel:
-            color = "#22c55e" if confirmed else "#e53935"
-            width = 3
+        active = _edge_active(src, tgt)
+        no_filter = not sel_team and not sel
+
+        if no_filter or active:
+            color   = "#22c55e" if confirmed else "#e53935"
+            width   = 3 if active and not no_filter else (2 if confirmed else 1.5)
             opacity = 1.0
         else:
-            color = "#ccc"
-            width = 1
-            opacity = 0.25
+            color   = "#ccc"
+            width   = 1
+            opacity = 0.18
 
         dash = "solid" if confirmed else "dot"
         traces.append(go.Scatter(
@@ -479,27 +550,21 @@ with tab1:
         c = NODE_STYLE[nid]
         nw, nh = _node_dims(nid)
 
-        # Determine visual state
-        if sel is None:
-            fill = c["fill"]
+        no_filter = not sel_team and not sel
+        active    = _is_active(nid)
+        is_sel    = nid == sel
+        in_team   = nid in sel_nodes
+
+        if no_filter or active:
+            fill         = c["fill"]
             border_color = c["line"]
-            border_width = 1.5
-            node_opacity = 1.0
-        elif nid == sel:
-            fill = c["fill"]
-            border_color = c["line"]
-            border_width = 3.5
-            node_opacity = 1.0
-        elif nid in related:
-            fill = c["fill"]
-            border_color = c["line"]
-            border_width = 2.5
+            border_width = 3.5 if is_sel else (2.5 if in_team and sel_team else 1.5)
             node_opacity = 1.0
         else:
-            fill = "#f5f5f5"
+            fill         = "#f5f5f5"
             border_color = "#ddd"
             border_width = 1.0
-            node_opacity = 0.4
+            node_opacity = 0.18
 
         shapes.append(dict(
             type="rect", x0=x, y0=y, x1=x+nw, y1=y+nh,
@@ -553,6 +618,163 @@ with tab1:
                    line=dict(width=2, color="#e53935", dash="dot"), name="❓ Unconfirmed / gap"),
     ]
 
+    # ── Pain callout badges ───────────────────────────────────────────────
+    # When a team is selected: numbered badges appear on that team's systems,
+    # ranked 1 = highest pain score descending. Tooltip = the team's actual
+    # pain note for that system cell, sourced from data.py PERSONAS.
+    # When no team is selected: badges are hidden entirely.
+
+    # Full pain data keyed by (team_role, system_id) → {score, pain, workaround}
+    TEAM_SYSTEM_PAIN = {
+        ("Underwriting", "personify"):   {"score": 3, "pain": "Major demographic gaps (DOB often missing/wrong); householding limitations block cross-sell and family-based journeys", "workaround": "Manual lookup and data patching across systems"},
+        ("Underwriting", "finys"):        {"score": 3, "pain": "Staff must jump across 2–3 systems to assemble member/policy/loss/payment context", "workaround": "Manual toggling between FINYS and ImageRight; rekeying increases errors"},
+        ("Underwriting", "imageright"):   {"score": 2, "pain": "Paper intake dependency creates delays; fragmented documentation slows complete file assembly", "workaround": "Scanning/indexing team acts as bottleneck; manual routing"},
+        ("Underwriting", "ods"):          {"score": 2, "pain": "Data trust issues when source systems don't link cleanly", "workaround": "Manual report wrangling"},
+        ("Underwriting", "countryway"):   {"score": 1, "pain": "Minor legacy dependency for some policy lookups", "workaround": ""},
+
+        ("Claims", "personify"):          {"score": 2, "pain": "Contact data often 5+ years out of date; no integration to claims vendor systems", "workaround": "Claimant Locator used as fallback — two separate unlinked systems"},
+        ("Claims", "finys"):              {"score": 3, "pain": "Claims data completely dark to relationship management side; multi-system lookups required for every case", "workaround": "Manual toggling between FINYS and ImageRight for every claim"},
+        ("Claims", "imageright"):         {"score": 2, "pain": "Fragmented documentation makes complete file assembly slow", "workaround": "Manual cross-reference between FINYS and ImageRight"},
+        ("Claims", "ods"):                {"score": 3, "pain": "ODS reports have hidden filters — payment data missing, discrepancies up to $100Ks", "workaround": "Claims manager manually pulls from 2–3 systems monthly (~6 hrs/month for a single incurred development report)"},
+        ("Claims", "countryway"):         {"score": 1, "pain": "Farm claims still touch legacy stack", "workaround": ""},
+        ("Claims", "claimant_locator"):   {"score": 0, "pain": "", "workaround": ""},
+
+        ("Policy Services", "personify"):  {"score": 2, "pain": "Member record often incomplete; agents bypass Personify entirely when MSS staff unavailable", "workaround": "Agents hand-type all customer data directly into FINYS; MSS creates Personify record later"},
+        ("Policy Services", "finys"):      {"score": 3, "pain": "System of work for processing; rekeying and multi-step intake slows throughput", "workaround": "Manual workarounds increase operating cost and inconsistency over time"},
+        ("Policy Services", "imageright"): {"score": 3, "pain": "Paper intake dependency creates downstream servicing delays when scanning/indexing is slow", "workaround": "Mailroom scanning team is a manual bottleneck; email and online submissions also route through here"},
+        ("Policy Services", "ods"):        {"score": 1, "pain": "Limited direct use; downstream pain from bad source data", "workaround": ""},
+        ("Policy Services", "countryway"): {"score": 2, "pain": "Dual-entry burden during migration; AS400 billing vs. deck page system require separate entries", "workaround": "Staff manually enter policies into two systems; missing either step creates billing or documentation failure"},
+
+        ("Membership & Field Services", "personify"):  {"score": 4, "pain": "No universal member ID; ~100k associate members with no confirmed policy tie-back; demographic data incomplete", "workaround": "Manual name/address matching; shadow spreadsheets for demographic filtering"},
+        ("Membership & Field Services", "finys"):      {"score": 2, "pain": "Cannot confirm which members hold active policies", "workaround": "Manual name/address matching"},
+        ("Membership & Field Services", "ods"):        {"score": 2, "pain": "Membership analytics degraded by upstream data quality gaps", "workaround": "Manual list pulls and Excel reconciliation"},
+        ("Membership & Field Services", "netsuite"):   {"score": 1, "pain": "Member status cannot be validated during product purchases", "workaround": "Trust-based system — any membership ID accepted without validation"},
+        ("Membership & Field Services", "hubspot"):    {"score": 2, "pain": "Member list data in HubSpot goes stale; no live sync from Personify", "workaround": "Marketing manually exports Personify lists into HubSpot before campaigns"},
+
+        ("Marketing", "personify"):  {"score": 3, "pain": "Demographic gaps (especially DOB) reduce lifecycle journey ability and analytics quality; list quality inconsistent", "workaround": "Manual list cleaning before campaigns"},
+        ("Marketing", "finys"):      {"score": 1, "pain": "No direct visibility into policy status for cross-sell targeting", "workaround": ""},
+        ("Marketing", "ods"):        {"score": 2, "pain": "Data trust issues slow campaign decision-making; lead data from VFB.com not reliably feeding dashboards", "workaround": "Manual report wrangling before planning"},
+        ("Marketing", "hubspot"):    {"score": 3, "pain": "Pilot with limited seats and read-only access to other systems; cannot serve as comprehensive CRM", "workaround": "Manual Personify list exports before every campaign; limited marketing automation capability"},
+        ("Marketing", "nexsure"):    {"score": 1, "pain": "Brokerage customer data invisible to marketing — no cross-sell visibility", "workaround": ""},
+
+        ("Sales / Field Agents", "personify"):  {"score": 3, "pain": "Commission tracking for brokerage requires manual keying into Personify; orphaned records when agents leave", "workaround": "Manual entry of brokerage policy elements into Personify"},
+        ("Sales / Field Agents", "finys"):      {"score": 3, "pain": "No CRM pipeline or renewal visibility for agents; brokerage quoting requires full re-entry", "workaround": "Field agents maintain personal Excel spreadsheets for prospect tracking — lost when agent leaves"},
+        ("Sales / Field Agents", "imageright"): {"score": 1, "pain": "Agents originate requests but have limited visibility into workflow status", "workaround": ""},
+        ("Sales / Field Agents", "ods"):        {"score": 1, "pain": "Limited direct access; downstream pain from broken source linkage", "workaround": ""},
+        ("Sales / Field Agents", "hubspot"):    {"score": 2, "pain": "Limited seats; not integrated with FINYS policy data so agents can't see full customer picture", "workaround": "Manual data assembly across systems before customer calls"},
+        ("Sales / Field Agents", "nexsure"):    {"score": 3, "pain": "Brokerage quotes in Applied Rater require complete re-entry into FINYS (6–7 min quote + 2–3 min re-entry); no integration", "workaround": "Agents manually re-enter all customer data for every brokerage quote"},
+        ("Sales / Field Agents", "countryway"): {"score": 1, "pain": "Countryway agents use separate login and commission system", "workaround": ""},
+
+        ("Countryway Ops", "personify"):  {"score": 1, "pain": "Limited use; some member record lookups", "workaround": ""},
+        ("Countryway Ops", "finys"):      {"score": 4, "pain": "Mid-migration dual-system operation creates parallel workflows; policies must be entered in AS400 for billing AND separate system for deck pages", "workaround": "Shadow spreadsheets to track policy status; parallel workflows in AS400 and FINYS simultaneously"},
+        ("Countryway Ops", "imageright"): {"score": 2, "pain": "Document storage for CW policies; some disconnects with workflow", "workaround": ""},
+        ("Countryway Ops", "ods"):        {"score": 3, "pain": "No IS & EDM integration — no automated Countryway reporting; staff pull manual extracts for leadership visibility", "workaround": "Manual extracts; ~6 hrs/month for single incurred development report"},
+        ("Countryway Ops", "netsuite"):   {"score": 1, "pain": "Some financial processing overlap", "workaround": ""},
+        ("Countryway Ops", "countryway"): {"score": 4, "pain": "AS400 legacy system requires manual data entry for billing and policy processing; dual-entry across AS400 and deck page system; missing either step causes billing failure or customers not receiving documents", "workaround": "Staff manually enter policies into two systems; discovered only when customers call"},
+
+        ("IS / Data Services", "personify"):  {"score": 4, "pain": "No universal member ID; heavily customized outdated version; 70% of members missing DOB; 8-hour manual billing run; identity resolution gap unaddressed in current governance program", "workaround": "Manual DOB backfill; placeholder ID cleanup"},
+        ("IS / Data Services", "finys"):      {"score": 3, "pain": "Central burden of data quality reconciliation and integration support; no API access for clean extraction", "workaround": "ODS extract via nightly file; shared DB workarounds"},
+        ("IS / Data Services", "imageright"): {"score": 1, "pain": "Tool used alongside Personify but not integrated", "workaround": ""},
+        ("IS / Data Services", "ods"):        {"score": 4, "pain": "ODS data unreliable due to upstream classification errors; hidden filters from past migrations cause payment data gaps and $100K+ discrepancies", "workaround": "Actuarial and product teams maintain separate Excel models; claims manager manually pulls from 2–3 systems monthly"},
+        ("IS / Data Services", "netsuite"):   {"score": 2, "pain": "NetSuite ↔ FINYS reconciliation unclear; no confirmed integration path", "workaround": "Accounting manually reconciles NetSuite entries against FINYS billing extracts"},
+        ("IS / Data Services", "hubspot"):    {"score": 1, "pain": "No ODS feed; no live Personify sync; governance blind spot", "workaround": ""},
+        ("IS / Data Services", "nexsure"):    {"score": 2, "pain": "Brokerage data invisible at enterprise level; 15 years of history untracked", "workaround": "Sales Analytics manually consolidates commission data from carrier portals via Excel"},
+        ("IS / Data Services", "countryway"): {"score": 3, "pain": "No IS & EDM integration for Countryway; mid-migration creates dual-system data quality risk", "workaround": "Manual extracts; parallel workflow tracking"},
+
+        ("Accounting / Products", "personify"):  {"score": 2, "pain": "No membership validation during product purchases; trust-based system accepts any member ID", "workaround": "Accept any membership ID without verification"},
+        ("Accounting / Products", "finys"):      {"score": 2, "pain": "FINYS billing data must be manually reconciled against NetSuite", "workaround": "Accounting manually reconciles NetSuite entries against FINYS billing extracts"},
+        ("Accounting / Products", "ods"):        {"score": 2, "pain": "ODS data unreliable for financial reporting; discrepancies up to $100Ks from hidden filters", "workaround": "Separate Excel models maintained by Actuarial/Product teams"},
+        ("Accounting / Products", "netsuite"):   {"score": 3, "pain": "Central hub for products division but no integration with Personify or FINYS; overall reconciliation is manual", "workaround": "Accounting manually reconciles across systems"},
+        ("Accounting / Products", "countryway"): {"score": 1, "pain": "Some financial processing overlap with legacy stack", "workaround": ""},
+
+        ("Federation / Special Programs", "personify"):  {"score": 3, "pain": "Demographic filtering (age, gender for Young Farmers/Women's Leadership) requires shadow spreadsheet; grain customers cannot be identified as Farm Bureau members", "workaround": "Shadow spreadsheets for demographic filtering; manual envelope labeling for grain payments"},
+        ("Federation / Special Programs", "finys"):      {"score": 1, "pain": "Limited direct use in Federation workflows", "workaround": ""},
+        ("Federation / Special Programs", "ods"):        {"score": 2, "pain": "Grain division data (Agtech) not flowing to any reporting layer; event data not connected to membership analytics", "workaround": "Manual data consolidation"},
+        ("Federation / Special Programs", "netsuite"):   {"score": 1, "pain": "Grain accounting requires manual reformatting for NetSuite", "workaround": "Manual reformat for every transaction"},
+        ("Federation / Special Programs", "hubspot"):    {"score": 1, "pain": "No visibility into Federation program participants in marketing systems", "workaround": ""},
+
+        ("Healthcare", "personify"):  {"score": 1, "pain": "No named data owner or confirmed system integration for HEA/healthcare cluster — open governance gap", "workaround": "Manual coordination with membership team"},
+        ("Healthcare", "ods"):        {"score": 1, "pain": "Healthcare data not flowing to ODS or any enterprise reporting layer", "workaround": "Standalone Salesforce reporting only"},
+
+        ("Grain Operations", "personify"):  {"score": 2, "pain": "Grain customers cannot be identified as Farm Bureau members — no linkage between Agtech and Personify", "workaround": "Manual envelope labeling for grain payment checks; no automated member lookup"},
+        ("Grain Operations", "ods"):        {"score": 2, "pain": "Grain division data (Agtech) not flowing to any reporting layer", "workaround": "Manual data consolidation from Agtech only"},
+        ("Grain Operations", "netsuite"):   {"score": 2, "pain": "Grain accounting requires manual reformatting for every transaction before NetSuite entry", "workaround": "Staff manually reformat every grain transaction"},
+
+        ("Meadow Event Farm", "personify"):  {"score": 2, "pain": "Etix ticketing cannot verify Farm Bureau membership in real time — member discounts applied on trust", "workaround": "Manual export of discount usage for post-event verification"},
+        ("Meadow Event Farm", "ods"):        {"score": 1, "pain": "Event attendance and sales data not connected to enterprise reporting", "workaround": "Standalone Etix reporting; manual consolidation for corporate reporting"},
+        ("Meadow Event Farm", "netsuite"):   {"score": 1, "pain": "Food and beverage POS requires manual data consolidation for accounting", "workaround": "Manual export from POS to third-party auditor then spreadsheets"},
+    }
+
+    # Score → badge color (mirrors heat map palette)
+    BADGE_COLORS = {
+        4: "#DC2626",   # critical — red
+        3: "#EA580C",   # high — orange-red
+        2: "#D97706",   # medium — amber
+        1: "#CA8A04",   # low — yellow-amber
+    }
+    BADGE_R = 0.18
+
+    if sel_team:
+        # Build ranked list: systems this team has pain scores for, desc by score
+        team_pain_entries = [
+            (sys_id, data)
+            for (team, sys_id), data in TEAM_SYSTEM_PAIN.items()
+            if team == sel_team and data["score"] > 0 and sys_id in NODE_POS
+        ]
+        # Sort descending by score, then stable by node position for ties
+        team_pain_entries.sort(key=lambda x: -x[1]["score"])
+
+        # Assign rank numbers (ties get same rank)
+        ranked = []
+        prev_score = None
+        rank = 0
+        for sys_id, data in team_pain_entries:
+            if data["score"] != prev_score:
+                rank += 1
+                prev_score = data["score"]
+            ranked.append((rank, sys_id, data))
+
+        for rank_num, sys_id, data in ranked:
+            ax, ay = NODE_POS[sys_id]
+            nw, nh  = _node_dims(sys_id)
+            bx = ax + nw
+            by = ay + nh
+            score   = data["score"]
+            pain    = data["pain"] or "No pain note recorded"
+            wkaround = data["workaround"]
+            tooltip = (
+                f"<b>#{rank_num} — Score {score}/4</b><br>"
+                f"<b>{SYS_LABEL.get(sys_id, sys_id)}</b> · {sel_team}<br>"
+                f"{pain}"
+                + (f"<br><i>Workaround: {wkaround}</i>" if wkaround else "")
+            )
+            col = BADGE_COLORS.get(score, "#DC2626")
+
+            shapes.append(dict(
+                type="circle",
+                x0=bx - BADGE_R, y0=by - BADGE_R,
+                x1=bx + BADGE_R, y1=by + BADGE_R,
+                fillcolor=col,
+                line=dict(color="white", width=1.5),
+                layer="above",
+                opacity=1.0,
+            ))
+            annotations.append(dict(
+                x=bx, y=by,
+                text=f"<b>{rank_num}</b>",
+                showarrow=False,
+                xanchor="center", yanchor="middle",
+                font=dict(size=10, color="white"),
+            ))
+            traces.append(go.Scatter(
+                x=[bx], y=[by],
+                mode="markers",
+                marker=dict(size=20, color="rgba(0,0,0,0)"),
+                hoverinfo="text",
+                hovertext=tooltip,
+                showlegend=False,
+            ))
+
     fig_map = go.Figure(data=traces)
     fig_map.update_layout(
         shapes=shapes,
@@ -587,10 +809,19 @@ with tab1:
                 st.session_state.selected_node = clicked_id
             st.rerun()
 
-    if sel:
+    if sel_team:
+        st.caption(f"Showing **{sel_team}** system footprint — click a node to explore its connections · click ✕ Clear to reset")
+        avg = TEAM_PAIN_AVG.get(sel_team, "—")
+        team_sys_labels = ", ".join(SYS_LABEL.get(s, s) for s in sorted(sel_nodes) if s in SYS_LABEL)
+        st.info(
+            f"**{sel_team}** · avg pain score **{avg} / 4** · "
+            f"depends on: {team_sys_labels}",
+            icon="👥",
+        )
+    elif sel:
         st.caption(f"Showing connections for **{SYS_LABEL[sel]}** — click again to deselect")
     else:
-        st.caption("Click any system node to highlight its connections")
+        st.caption("Filter by team above, or click any system node to highlight its connections")
 
     # ── System detail panel ────────────────────────────────────────────────
     st.divider()
