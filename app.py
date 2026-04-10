@@ -26,6 +26,25 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ── Access gate ───────────────────────────────────────────────────────────────
+APP_PASSWORD = "Richmond1"
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    st.title("🔒 Access Required")
+    st.caption("Enter the app password to continue.")
+    with st.form("login_form", clear_on_submit=False):
+        pw = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Enter")
+    if submitted:
+        if pw == APP_PASSWORD:
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Incorrect password.")
+    st.stop()
+
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
