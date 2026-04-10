@@ -11,6 +11,7 @@ import math
 
 # ── Import systems data ───────────────────────────────────────────────────────
 from systems_data import SYSTEMS
+from data import PERSONAS
 
 st.set_page_config(page_title="VAFB Dependency Map", layout="wide")
 
@@ -390,22 +391,11 @@ with tab1:
     # ── Team filter UI ─────────────────────────────────────────────────────
     # Build lookup: team name → system ids
     TEAM_DEPS_MAP = {t: set(deps) for t, deps, _ in TEAM_SYSTEM_DEPS}
-    # Pain averages: non-zero scores only, sourced directly from data.py PERSONAS
-    TEAM_PAIN_AVG = {
-        "Underwriting":                 2.29,
-        "Claims":                       2.14,
-        "Policy Services":              2.43,
-        "Membership & Field Services":  2.43,
-        "Marketing":                    2.0,
-        "Sales / Field Agents":         2.12,
-        "Countryway Ops":               2.43,
-        "IS / Data Services":           2.5,
-        "Accounting / Products":        1.86,
-        "Federation / Special Programs":1.5,
-        "Healthcare":                   1.67,
-        "Grain Operations":             2.5,
-        "Meadow Event Farm":            1.75,
-    }
+    # Pain averages: computed live from PERSONAS non-zero scores
+    def _avg_pain(persona):
+        vals = [v for v in persona["scores"].values() if v > 0]
+        return round(sum(vals) / len(vals), 2) if vals else 0.0
+    TEAM_PAIN_AVG = {p["role"]: _avg_pain(p) for p in PERSONAS}
 
     col_filter, col_clear = st.columns([5, 1])
     with col_filter:
@@ -624,88 +614,19 @@ with tab1:
     # pain note for that system cell, sourced from data.py PERSONAS.
     # When no team is selected: badges are hidden entirely.
 
-    # Full pain data keyed by (team_role, system_id) → {score, pain, workaround}
+    # Pain data: built live from PERSONAS — score, pain note, workaround per (team, system)
+    # Any edit to data.py is automatically reflected here on next Streamlit reload.
     TEAM_SYSTEM_PAIN = {
-        ("Underwriting", "personify"):   {"score": 3, "pain": "Major demographic gaps (DOB often missing/wrong); householding limitations block cross-sell and family-based journeys", "workaround": "Manual lookup and data patching across systems"},
-        ("Underwriting", "finys"):        {"score": 3, "pain": "Staff must jump across 2–3 systems to assemble member/policy/loss/payment context", "workaround": "Manual toggling between FINYS and ImageRight; rekeying increases errors"},
-        ("Underwriting", "imageright"):   {"score": 2, "pain": "Paper intake dependency creates delays; fragmented documentation slows complete file assembly", "workaround": "Scanning/indexing team acts as bottleneck; manual routing"},
-        ("Underwriting", "ods"):          {"score": 2, "pain": "Data trust issues when source systems don't link cleanly", "workaround": "Manual report wrangling"},
-        ("Underwriting", "countryway"):   {"score": 1, "pain": "Minor legacy dependency for some policy lookups", "workaround": ""},
-
-        ("Claims", "personify"):          {"score": 2, "pain": "Contact data often 5+ years out of date; no integration to claims vendor systems", "workaround": "Claimant Locator used as fallback — two separate unlinked systems"},
-        ("Claims", "finys"):              {"score": 3, "pain": "Claims data completely dark to relationship management side; multi-system lookups required for every case", "workaround": "Manual toggling between FINYS and ImageRight for every claim"},
-        ("Claims", "imageright"):         {"score": 2, "pain": "Fragmented documentation makes complete file assembly slow", "workaround": "Manual cross-reference between FINYS and ImageRight"},
-        ("Claims", "ods"):                {"score": 3, "pain": "ODS reports have hidden filters — payment data missing, discrepancies up to $100Ks", "workaround": "Claims manager manually pulls from 2–3 systems monthly (~6 hrs/month for a single incurred development report)"},
-        ("Claims", "countryway"):         {"score": 1, "pain": "Farm claims still touch legacy stack", "workaround": ""},
-        ("Claims", "claimant_locator"):   {"score": 0, "pain": "", "workaround": ""},
-
-        ("Policy Services", "personify"):  {"score": 2, "pain": "Member record often incomplete; agents bypass Personify entirely when MSS staff unavailable", "workaround": "Agents hand-type all customer data directly into FINYS; MSS creates Personify record later"},
-        ("Policy Services", "finys"):      {"score": 3, "pain": "System of work for processing; rekeying and multi-step intake slows throughput", "workaround": "Manual workarounds increase operating cost and inconsistency over time"},
-        ("Policy Services", "imageright"): {"score": 3, "pain": "Paper intake dependency creates downstream servicing delays when scanning/indexing is slow", "workaround": "Mailroom scanning team is a manual bottleneck; email and online submissions also route through here"},
-        ("Policy Services", "ods"):        {"score": 1, "pain": "Limited direct use; downstream pain from bad source data", "workaround": ""},
-        ("Policy Services", "countryway"): {"score": 2, "pain": "Dual-entry burden during migration; AS400 billing vs. deck page system require separate entries", "workaround": "Staff manually enter policies into two systems; missing either step creates billing or documentation failure"},
-
-        ("Membership & Field Services", "personify"):  {"score": 4, "pain": "No universal member ID; ~100k associate members with no confirmed policy tie-back; demographic data incomplete", "workaround": "Manual name/address matching; shadow spreadsheets for demographic filtering"},
-        ("Membership & Field Services", "finys"):      {"score": 2, "pain": "Cannot confirm which members hold active policies", "workaround": "Manual name/address matching"},
-        ("Membership & Field Services", "ods"):        {"score": 2, "pain": "Membership analytics degraded by upstream data quality gaps", "workaround": "Manual list pulls and Excel reconciliation"},
-        ("Membership & Field Services", "netsuite"):   {"score": 1, "pain": "Member status cannot be validated during product purchases", "workaround": "Trust-based system — any membership ID accepted without validation"},
-        ("Membership & Field Services", "hubspot"):    {"score": 2, "pain": "Member list data in HubSpot goes stale; no live sync from Personify", "workaround": "Marketing manually exports Personify lists into HubSpot before campaigns"},
-
-        ("Marketing", "personify"):  {"score": 3, "pain": "Demographic gaps (especially DOB) reduce lifecycle journey ability and analytics quality; list quality inconsistent", "workaround": "Manual list cleaning before campaigns"},
-        ("Marketing", "finys"):      {"score": 1, "pain": "No direct visibility into policy status for cross-sell targeting", "workaround": ""},
-        ("Marketing", "ods"):        {"score": 2, "pain": "Data trust issues slow campaign decision-making; lead data from VFB.com not reliably feeding dashboards", "workaround": "Manual report wrangling before planning"},
-        ("Marketing", "hubspot"):    {"score": 3, "pain": "Pilot with limited seats and read-only access to other systems; cannot serve as comprehensive CRM", "workaround": "Manual Personify list exports before every campaign; limited marketing automation capability"},
-        ("Marketing", "nexsure"):    {"score": 1, "pain": "Brokerage customer data invisible to marketing — no cross-sell visibility", "workaround": ""},
-
-        ("Sales / Field Agents", "personify"):  {"score": 3, "pain": "Commission tracking for brokerage requires manual keying into Personify; orphaned records when agents leave", "workaround": "Manual entry of brokerage policy elements into Personify"},
-        ("Sales / Field Agents", "finys"):      {"score": 3, "pain": "No CRM pipeline or renewal visibility for agents; brokerage quoting requires full re-entry", "workaround": "Field agents maintain personal Excel spreadsheets for prospect tracking — lost when agent leaves"},
-        ("Sales / Field Agents", "imageright"): {"score": 1, "pain": "Agents originate requests but have limited visibility into workflow status", "workaround": ""},
-        ("Sales / Field Agents", "ods"):        {"score": 1, "pain": "Limited direct access; downstream pain from broken source linkage", "workaround": ""},
-        ("Sales / Field Agents", "hubspot"):    {"score": 2, "pain": "Limited seats; not integrated with FINYS policy data so agents can't see full customer picture", "workaround": "Manual data assembly across systems before customer calls"},
-        ("Sales / Field Agents", "nexsure"):    {"score": 3, "pain": "Brokerage quotes in Applied Rater require complete re-entry into FINYS (6–7 min quote + 2–3 min re-entry); no integration", "workaround": "Agents manually re-enter all customer data for every brokerage quote"},
-        ("Sales / Field Agents", "countryway"): {"score": 1, "pain": "Countryway agents use separate login and commission system", "workaround": ""},
-
-        ("Countryway Ops", "personify"):  {"score": 1, "pain": "Limited use; some member record lookups", "workaround": ""},
-        ("Countryway Ops", "finys"):      {"score": 4, "pain": "Mid-migration dual-system operation creates parallel workflows; policies must be entered in AS400 for billing AND separate system for deck pages", "workaround": "Shadow spreadsheets to track policy status; parallel workflows in AS400 and FINYS simultaneously"},
-        ("Countryway Ops", "imageright"): {"score": 2, "pain": "Document storage for CW policies; some disconnects with workflow", "workaround": ""},
-        ("Countryway Ops", "ods"):        {"score": 3, "pain": "No IS & EDM integration — no automated Countryway reporting; staff pull manual extracts for leadership visibility", "workaround": "Manual extracts; ~6 hrs/month for single incurred development report"},
-        ("Countryway Ops", "netsuite"):   {"score": 1, "pain": "Some financial processing overlap", "workaround": ""},
-        ("Countryway Ops", "countryway"): {"score": 4, "pain": "AS400 legacy system requires manual data entry for billing and policy processing; dual-entry across AS400 and deck page system; missing either step causes billing failure or customers not receiving documents", "workaround": "Staff manually enter policies into two systems; discovered only when customers call"},
-
-        ("IS / Data Services", "personify"):  {"score": 4, "pain": "No universal member ID; heavily customized outdated version; 70% of members missing DOB; 8-hour manual billing run; identity resolution gap unaddressed in current governance program", "workaround": "Manual DOB backfill; placeholder ID cleanup"},
-        ("IS / Data Services", "finys"):      {"score": 3, "pain": "Central burden of data quality reconciliation and integration support; no API access for clean extraction", "workaround": "ODS extract via nightly file; shared DB workarounds"},
-        ("IS / Data Services", "imageright"): {"score": 1, "pain": "Tool used alongside Personify but not integrated", "workaround": ""},
-        ("IS / Data Services", "ods"):        {"score": 4, "pain": "ODS data unreliable due to upstream classification errors; hidden filters from past migrations cause payment data gaps and $100K+ discrepancies", "workaround": "Actuarial and product teams maintain separate Excel models; claims manager manually pulls from 2–3 systems monthly"},
-        ("IS / Data Services", "netsuite"):   {"score": 2, "pain": "NetSuite ↔ FINYS reconciliation unclear; no confirmed integration path", "workaround": "Accounting manually reconciles NetSuite entries against FINYS billing extracts"},
-        ("IS / Data Services", "hubspot"):    {"score": 1, "pain": "No ODS feed; no live Personify sync; governance blind spot", "workaround": ""},
-        ("IS / Data Services", "nexsure"):    {"score": 2, "pain": "Brokerage data invisible at enterprise level; 15 years of history untracked", "workaround": "Sales Analytics manually consolidates commission data from carrier portals via Excel"},
-        ("IS / Data Services", "countryway"): {"score": 3, "pain": "No IS & EDM integration for Countryway; mid-migration creates dual-system data quality risk", "workaround": "Manual extracts; parallel workflow tracking"},
-
-        ("Accounting / Products", "personify"):  {"score": 2, "pain": "No membership validation during product purchases; trust-based system accepts any member ID", "workaround": "Accept any membership ID without verification"},
-        ("Accounting / Products", "finys"):      {"score": 2, "pain": "FINYS billing data must be manually reconciled against NetSuite", "workaround": "Accounting manually reconciles NetSuite entries against FINYS billing extracts"},
-        ("Accounting / Products", "ods"):        {"score": 2, "pain": "ODS data unreliable for financial reporting; discrepancies up to $100Ks from hidden filters", "workaround": "Separate Excel models maintained by Actuarial/Product teams"},
-        ("Accounting / Products", "netsuite"):   {"score": 3, "pain": "Central hub for products division but no integration with Personify or FINYS; overall reconciliation is manual", "workaround": "Accounting manually reconciles across systems"},
-        ("Accounting / Products", "countryway"): {"score": 1, "pain": "Some financial processing overlap with legacy stack", "workaround": ""},
-
-        ("Federation / Special Programs", "personify"):  {"score": 3, "pain": "Demographic filtering (age, gender for Young Farmers/Women's Leadership) requires shadow spreadsheet; grain customers cannot be identified as Farm Bureau members", "workaround": "Shadow spreadsheets for demographic filtering; manual envelope labeling for grain payments"},
-        ("Federation / Special Programs", "finys"):      {"score": 1, "pain": "Limited direct use in Federation workflows", "workaround": ""},
-        ("Federation / Special Programs", "ods"):        {"score": 2, "pain": "Grain division data (Agtech) not flowing to any reporting layer; event data not connected to membership analytics", "workaround": "Manual data consolidation"},
-        ("Federation / Special Programs", "netsuite"):   {"score": 1, "pain": "Grain accounting requires manual reformatting for NetSuite", "workaround": "Manual reformat for every transaction"},
-        ("Federation / Special Programs", "hubspot"):    {"score": 1, "pain": "No visibility into Federation program participants in marketing systems", "workaround": ""},
-
-        ("Healthcare", "personify"):  {"score": 1, "pain": "No named data owner or confirmed system integration for HEA/healthcare cluster — open governance gap", "workaround": "Manual coordination with membership team"},
-        ("Healthcare", "ods"):        {"score": 1, "pain": "Healthcare data not flowing to ODS or any enterprise reporting layer", "workaround": "Standalone Salesforce reporting only"},
-
-        ("Grain Operations", "personify"):  {"score": 2, "pain": "Grain customers cannot be identified as Farm Bureau members — no linkage between Agtech and Personify", "workaround": "Manual envelope labeling for grain payment checks; no automated member lookup"},
-        ("Grain Operations", "ods"):        {"score": 2, "pain": "Grain division data (Agtech) not flowing to any reporting layer", "workaround": "Manual data consolidation from Agtech only"},
-        ("Grain Operations", "netsuite"):   {"score": 2, "pain": "Grain accounting requires manual reformatting for every transaction before NetSuite entry", "workaround": "Staff manually reformat every grain transaction"},
-
-        ("Meadow Event Farm", "personify"):  {"score": 2, "pain": "Etix ticketing cannot verify Farm Bureau membership in real time — member discounts applied on trust", "workaround": "Manual export of discount usage for post-event verification"},
-        ("Meadow Event Farm", "ods"):        {"score": 1, "pain": "Event attendance and sales data not connected to enterprise reporting", "workaround": "Standalone Etix reporting; manual consolidation for corporate reporting"},
-        ("Meadow Event Farm", "netsuite"):   {"score": 1, "pain": "Food and beverage POS requires manual data consolidation for accounting", "workaround": "Manual export from POS to third-party auditor then spreadsheets"},
+        (p["role"], sid): {
+            "score":      p["scores"].get(sid, 0),
+            "pain":       p["notes"].get(sid, {}).get("pain", ""),
+            "workaround": p["notes"].get(sid, {}).get("workaround", ""),
+        }
+        for p in PERSONAS
+        for sid in p["scores"]
     }
 
-    # Score → badge color (mirrors heat map palette)
+        # Score → badge color (mirrors heat map palette)
     BADGE_COLORS = {
         4: "#DC2626",   # critical — red
         3: "#EA580C",   # high — orange-red

@@ -149,10 +149,10 @@ PERSONAS = [
         "subtitle": "Laurie Gannon · David Jewell · Ann Baskett",
         "system":   "FINYS + ImageRight + ODS",
         "color":    "#B45309",
-        "status":   "validated",
+        "status": "validated",
         "scores": {
             "personify":          2,
-            "finys":              3,
+            "finys":   4,
             "imageright":         2,
             "ods":                3,
             "netsuite":           0,
@@ -167,7 +167,7 @@ PERSONAS = [
         },
         "notes": {
             "personify":          {"pain": "Contact data often 5+ years out of date; no integration to claims vendor systems", "workaround": "Claimant Locator used as fallback — two separate unlinked systems", "data_gap": "No unified claimant contact view; Personify and Claimant Locator not integrated"},
-            "finys":              {"pain": "Claims data completely dark to relationship management side; multi-system lookups required for every case", "workaround": "Manual toggling between FINYS and ImageRight for every claim", "data_gap": "No single system surfaces complete claim + customer + document context"},
+            "finys": {"pain": "-They can’t trust reporting / data coming out of the ecosystem (which includes insurance systems feeding ODS): numbers are often incorrect/incomplete; payment data can be missing from reports; hidden filters/logic in reports make them hard to validate; fixes take months or never happen.\n- Heavy manual reconciliation across multiple systems: they have to pull from 2–3 systems to compile reports, which creates major time waste and prevents process improvement work.\n- System switching + lack of integration: Claims data is spread across systems (called out as Finys, AS400 (Countryway), and a legacy PMS), and staff have to bounce between tools instead of having one connected view.\n- Related (from another interview): teams outside Claims noted they  can’t easily access Finesse claims notes/reserve info, and have to request it from Claims—another symptom of the same fragmentation/access pain.", "workaround": "Manual toggling between FINYS and ImageRight for every claim", "data_gap": "No single system surfaces complete claim + customer + document context"},
             "imageright":         {"pain": "Fragmented documentation makes complete file assembly slow", "workaround": "Manual cross-reference between FINYS and ImageRight", "data_gap": ""},
             "ods":                {"pain": "ODS reports have hidden filters — payment data missing, discrepancies up to $100Ks", "workaround": "Claims manager manually pulls from 2–3 systems monthly (~6 hrs/month for a single incurred development report)", "data_gap": "Upstream classification errors make ODS unreliable for claims analytics"},
             "netsuite":           {"pain": "", "workaround": "", "data_gap": ""},
