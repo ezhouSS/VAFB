@@ -94,9 +94,8 @@ SYS_LOOKUP["first_call"]       = {**_vendor_proxy, "id": "first_call",
 _ext_proxy = {"severity": 2, "owner": "Underwriting / 3rd party", "known_gaps": [], "workarounds": []}
 SYS_LOOKUP["lexisnexis"]       = {**_ext_proxy, "id": "lexisnexis",
                                     "name": "LexisNexis", "category": "External Data Provider"}
+
 # Team → systems they depend on
-# Source: data.py PERSONAS — systems with score > 0, mapped to dependency map node IDs
-# Averages: non-zero scores only (matches heat map display)
 TEAM_SYSTEM_DEPS = [
     ("Underwriting",               ["personify", "finys", "imageright", "ods", "countryway"],                                          15),
     ("Claims",                     ["personify", "finys", "imageright", "ods", "countryway", "claimant_locator"],                      10),
@@ -110,7 +109,7 @@ TEAM_SYSTEM_DEPS = [
     ("Federation / Special Programs",["personify", "finys", "ods", "netsuite", "hubspot"],                                              2),
     ("Healthcare",                 ["personify", "ods"],                                                                                 3),
     ("Grain Operations",           ["personify", "ods", "netsuite"],                                                                    2),
-    ("Meadow Event Farm",          ["personify", "ods", "netsuite"],                                                                    2),
+    ("Meadow Event Farm",          ["personify", "ods", "netsuite"],                                                                     2),
 ]
 
 # Workaround → upstream root cause system
@@ -324,24 +323,25 @@ with tab1:
 
     # ── Node layout & styles ───────────────────────────────────────────────
     NODE_POS = {
-        # Core systems — top two rows
-        "personify":        (0.2,  2.2),
-        "finys":            (3.2,  2.2),
-        "countryway":       (0.2,  0.5),
-        "hubspot":          (6.4,  2.2),
-        "ods":              (6.4,  0.5),
-        "netsuite":         (3.2,  0.5),
-        "imageright":       (6.4, -1.2),
-        # Brokerage cluster — bottom left
-        "nexsure":          (0.2, -1.2),
-        "applied_rater":    (0.2, -2.9),
-        "carrier_portals":  (3.2, -2.9),
-        # Claims vendor cluster — bottom right
-        "claimant_locator": (6.4, -2.9),
-        "himarly":          (6.4, -4.4),
-        "first_call":       (3.2, -4.4),
-        # External data providers — far right
-        "lexisnexis":       (9.0,  0.5),
+        # Core — col 1 (x=0.2)
+        "personify":        (0.2,  1.5),
+        "countryway":       (0.2, -0.2),
+        # Core — col 2 (x=3.0)
+        "finys":            (3.0,  1.5),
+        "netsuite":         (3.0, -0.2),
+        # Core — col 3 (x=5.8)
+        "hubspot":          (5.8,  1.5),
+        "ods":              (5.8, -0.2),
+        "imageright":       (5.8, -1.9),
+        # External / vendor — left sub-col (x=9.2): data providers + brokerage
+        "lexisnexis":       (9.2,  1.5),
+        "nexsure":          (9.2,  0.2),
+        "applied_rater":    (9.2, -1.1),
+        "carrier_portals":  (9.2, -2.4),
+        # External / vendor — right sub-col (x=11.2): claims + comms vendors
+        "claimant_locator": (11.2,  0.2),
+        "first_call":       (11.2, -1.1),
+        "himarly":          (11.2, -2.4),
     }
     NODE_STYLE = {
         "personify":        {"fill": "#E1F5EE", "line": "#0F6E56", "text": "#085041"},
@@ -422,7 +422,7 @@ with tab1:
     new_team = None if chosen.startswith("—") else chosen
     if new_team != st.session_state.selected_team:
         st.session_state.selected_team  = new_team
-        st.session_state.selected_node  = None   # reset node selection when team changes
+        st.session_state.selected_node  = None
         st.rerun()
 
     sel_team  = st.session_state.selected_team
@@ -430,7 +430,6 @@ with tab1:
 
     sel = st.session_state.selected_node
 
-    # Which nodes are "related" to the selected one?
     def related_nodes(node_id):
         connected = set()
         for src, tgt, _, _ in SYSTEM_EDGES:
@@ -440,8 +439,6 @@ with tab1:
 
     related = related_nodes(sel) if sel else set()
 
-    # Active highlight set: team filter takes precedence over node click
-    # if both are set, intersect (show team systems + clicked node's neighbours)
     def _is_active(nid):
         if sel_team and sel:
             return nid in sel_nodes or nid == sel or nid in related
@@ -449,7 +446,7 @@ with tab1:
             return nid in sel_nodes
         if sel:
             return nid == sel or nid in related
-        return True  # no filter
+        return True
 
     def _edge_active(src, tgt):
         if sel_team and sel:
@@ -460,35 +457,55 @@ with tab1:
             return src in sel_nodes and tgt in sel_nodes
         if sel:
             return src == sel or tgt == sel
-        return True  # no filter
+        return True
 
     # ── Build figure ───────────────────────────────────────────────────────
     shapes, annotations, traces = [], [], []
 
     # Region outlines
-    for label, x0, x1 in [("VAFB core", -0.1, 5.6), ("External / vendor", 6.1, 9.0), ("External data", 8.7, 11.4)]:
+    for label, x0, x1 in [("VAFB core", -0.1, 8.6), ("External / vendor", 8.7, 13.2)]:
         shapes.append(dict(
-            type="rect", x0=x0, y0=-5.25, x1=x1, y1=3.3,
+            type="rect", x0=x0, y0=-4.2, x1=x1, y1=2.6,
             fillcolor="rgba(0,0,0,0)",
             line=dict(color="#e0e0e0", width=1, dash="dot"),
             layer="below",
         ))
         annotations.append(dict(
-            x=x0+0.12, y=3.15, text=label, showarrow=False,
+            x=x0+0.12, y=2.5, text=label, showarrow=False,
             xanchor="left", yanchor="top",
             font=dict(size=11, color="#ccc"),
         ))
-    # Brokerage cluster label
+
+    # External sub-column labels
     annotations.append(dict(
-        x=-0.1, y=-0.9, text="Brokerage (IAS — isolated)", showarrow=False,
-        xanchor="left", yanchor="top",
-        font=dict(size=10, color="#D85A30"),
+        x=10.2, y=2.1, text="Data providers · Brokerage",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=9, color="#aaa"),
     ))
-    # Claims vendors cluster label
     annotations.append(dict(
-        x=6.1, y=-2.6, text="Claims vendors (unintegrated)", showarrow=False,
-        xanchor="left", yanchor="top",
-        font=dict(size=10, color="#7F77DD"),
+        x=12.2, y=2.1, text="Claims · Comms vendors",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=9, color="#aaa"),
+    ))
+
+    # Field Ops / Events — static isolated box spanning both external sub-cols
+    shapes.append(dict(
+        type="rect", x0=9.0, y0=-4.1, x1=13.1, y1=-3.1,
+        fillcolor="rgba(3, 105, 161, 0.05)",
+        line=dict(color="#0369A1", width=1.5, dash="dot"),
+        layer="below",
+    ))
+    annotations.append(dict(
+        x=11.05, y=-3.15,
+        text="<b>Field Ops / Events</b> · isolated · no member integration",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=10, color="#0369A1"),
+    ))
+    annotations.append(dict(
+        x=11.05, y=-3.55,
+        text="Etix · SurveyMonkey · 4-H Registration",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=9, color="#0C4A6E"),
     ))
 
     # Count how many teams depend on each system
@@ -497,14 +514,13 @@ with tab1:
         for _sid in _deps:
             _team_counts[_sid] = _team_counts.get(_sid, 0) + 1
 
-    # Per-node dimensions: single-team systems get a smaller box
     def _node_dims(nid):
         count = _team_counts.get(nid, 0)
         if count <= 1:
-            return 1.6, 0.55   # small: w, h
-        return W, H             # full size
+            return 1.6, 0.55
+        return W, H
 
-    # Edge traces — highlight connected, dim unconnected
+    # Edge traces
     for src, tgt, lbl, confirmed in SYSTEM_EDGES:
         sw, sh = _node_dims(src)
         tw, th = _node_dims(tgt)
@@ -582,7 +598,6 @@ with tab1:
             font=dict(size=sub_size, color=sub_color),
         ))
 
-        # Invisible scatter for click detection — customdata carries node id
         NODE_TRACE_IDX[nid] = len(traces)
         traces.append(go.Scatter(
             x=[x+nw/2], y=[y+nh/2],
@@ -609,13 +624,6 @@ with tab1:
     ]
 
     # ── Pain callout badges ───────────────────────────────────────────────
-    # When a team is selected: numbered badges appear on that team's systems,
-    # ranked 1 = highest pain score descending. Tooltip = the team's actual
-    # pain note for that system cell, sourced from data.py PERSONAS.
-    # When no team is selected: badges are hidden entirely.
-
-    # Pain data: built live from PERSONAS — score, pain note, workaround per (team, system)
-    # Any edit to data.py is automatically reflected here on next Streamlit reload.
     TEAM_SYSTEM_PAIN = {
         (p["role"], sid): {
             "score":      p["scores"].get(sid, 0),
@@ -626,26 +634,22 @@ with tab1:
         for sid in p["scores"]
     }
 
-        # Score → badge color (mirrors heat map palette)
     BADGE_COLORS = {
-        4: "#DC2626",   # critical — red
-        3: "#EA580C",   # high — orange-red
-        2: "#D97706",   # medium — amber
-        1: "#CA8A04",   # low — yellow-amber
+        4: "#DC2626",
+        3: "#EA580C",
+        2: "#D97706",
+        1: "#CA8A04",
     }
     BADGE_R = 0.18
 
     if sel_team:
-        # Build ranked list: systems this team has pain scores for, desc by score
         team_pain_entries = [
             (sys_id, data)
             for (team, sys_id), data in TEAM_SYSTEM_PAIN.items()
             if team == sel_team and data["score"] > 0 and sys_id in NODE_POS
         ]
-        # Sort descending by score, then stable by node position for ties
         team_pain_entries.sort(key=lambda x: -x[1]["score"])
 
-        # Assign rank numbers (ties get same rank)
         ranked = []
         prev_score = None
         rank = 0
@@ -702,8 +706,8 @@ with tab1:
         annotations=annotations,
         height=720,
         margin=dict(l=10, r=10, t=20, b=30),
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.3, 11.6]),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-5.3, 3.4]),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.3, 13.4]),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-4.4, 2.8]),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="left", x=0),
@@ -719,13 +723,12 @@ with tab1:
         key="dep_map_chart",
     )
 
-    # Process click: extract node id from customdata
     if event and event.get("selection") and event["selection"].get("points"):
         pt = event["selection"]["points"][0]
         clicked_id = pt.get("customdata")
         if clicked_id and clicked_id in NODE_POS:
             if st.session_state.selected_node == clicked_id:
-                st.session_state.selected_node = None  # toggle off
+                st.session_state.selected_node = None
             else:
                 st.session_state.selected_node = clicked_id
             st.rerun()
@@ -748,9 +751,7 @@ with tab1:
     st.divider()
     st.markdown("#### System detail")
 
-    # All nodes on the map, not just SYSTEMS list
     sys_options = list(NODE_POS.keys())
-    # If a node was clicked, sync the dropdown to it
     if sel and sel in sys_options:
         default_idx = sys_options.index(sel)
     else:
@@ -766,7 +767,6 @@ with tab1:
             key="dep_map_sys_select",
         )
 
-    # Keep dropdown index in sync for next render
     st.session_state["dep_map_sys_select_idx"] = sys_options.index(selected_sys)
 
     s   = SYS_LOOKUP[selected_sys]
@@ -828,7 +828,6 @@ with tab2:
         import plotly.express as px
         import pandas as pd
 
-        # Build matrix: rows = teams, cols = systems
         sys_ids   = [s["id"] for s in SYSTEMS]
         sys_names = [SYS_LABEL[i] for i in sys_ids]
         team_names = [t[0] for t in TEAM_SYSTEM_DEPS]
@@ -912,7 +911,6 @@ with tab2:
                 f"<small>Owner: {s['owner']}</small>",
                 unsafe_allow_html=True,
             )
-            # Show gaps relevant to this team
             for g in s["known_gaps"][:2]:
                 st.write(f"  ↳ {g}")
 
@@ -925,33 +923,26 @@ with tab2:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 4: ACT 1 — ACQUISITION FLOW
+# TAB 3: ACT 1 — ACQUISITION FLOW
 # ════════════════════════════════════════════════════════════════════════════
 with tab3:
     st.markdown("#### Current-State Member & Customer Acquisition Flow")
     st.caption("Solid = working · Orange = degraded · Red dashed = broken/missing · Gray dashed = manual · Click a node to explore connections")
 
-    # ── Node definitions ─────────────────────────────────────────────────
-    # (id, label, subtitle, x_center, y_center, w, h, fill, line, text_color)
-    # Layout: 4 rows top-to-bottom. x/y in data coords (0..10 × 0..10)
     ACT1_NODES = [
-        # Entry channels — y=8.5
         ("agent",         "Agent / MSS",       "Quote · bind · enroll",          1.2,  8.5, 2.0, 0.75, "#E1F5EE", "#0F6E56", "#085041"),
         ("web",           "VFB.com quote",     "Self-service quote",              3.8,  8.5, 2.0, 0.75, "#E1F5EE", "#0F6E56", "#085041"),
         ("product_buyer", "Product buyer",     "Enters member ID",                6.2,  8.5, 2.0, 0.75, "#E1F5EE", "#0F6E56", "#085041"),
         ("event_buyer",   "Event buyer",       "Ticket purchase",                 8.8,  8.5, 2.0, 0.75, "#E1F5EE", "#0F6E56", "#085041"),
-        # Core systems — y=5.5
         ("personify",     "Personify",         "Member profile · billing",        2.0,  5.5, 2.4, 0.85, "#E6F1FB", "#185FA5", "#0C447C"),
         ("finys",         "FINYS",             "Quotes · policies · claims",      5.0,  5.5, 2.4, 0.85, "#FAECE7", "#993C1D", "#712B13"),
         ("netsuite",      "NetSuite",          "Products · payments",             8.0,  5.5, 2.4, 0.85, "#EEEDFE", "#534AB7", "#3C3489"),
-        # Supporting systems — y=2.5
         ("ods",           "ODS",               "Reporting layer",                 1.2,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
         ("etix",          "Etix",              "Event ticketing",                 3.8,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
-        ("agtech",      "Agtech",          "Grain operations",                6.2,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
+        ("agtech",        "Agtech",            "Grain operations",                6.2,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
         ("excel",         "Excel / manual",    "Shadow workarounds",              8.8,  2.5, 2.0, 0.75, "#F1EFE8", "#5F5E5A", "#2C2C2A"),
     ]
 
-    # ── Edge definitions ─────────────────────────────────────────────────
     ACT1_EDGES = [
         ("agent",         "personify",  "Creates / updates member profile",       "working"),
         ("web",           "finys",      "Quote + customer info",                  "working"),
@@ -962,8 +953,8 @@ with tab3:
         ("finys",         "ods",        "Nightly policy / quote feed",            "working"),
         ("netsuite",      "personify",  "Missing: no membership validation",      "broken"),
         ("etix",          "personify",  "Missing: no real-time verification",     "broken"),
-        ("agtech",      "personify",  "Isolated: no corporate member tie",      "broken"),
-        ("agtech",      "finys",      "Isolated: no insurance / customer tie",  "broken"),
+        ("agtech",        "personify",  "Isolated: no corporate member tie",      "broken"),
+        ("agtech",        "finys",      "Isolated: no insurance / customer tie",  "broken"),
         ("agent",         "finys",      "Manual re-entry when lookup fails",      "manual"),
         ("etix",          "excel",      "Manual export / reconcile",              "manual"),
     ]
@@ -985,18 +976,16 @@ with tab3:
         "netsuite":      "Products division hub for inventory, pricing, and payment processing. No integration with Personify for membership validation — any ID accepted on trust.",
         "ods":           "Operational Data Store — reporting layer fed by FINYS nightly. Data trust issues due to upstream Personify ↔ FINYS identity gaps and hidden filters causing $100K+ discrepancies.",
         "etix":          "Third-party event ticketing platform. No real-time connection to Personify for membership verification. Post-event reconciliation requires manual CSV exports.",
-        "agtech":      "Grain merchandising system — fully siloed. No integration with Personify or FINYS. Grain customers cannot be identified as Farm Bureau members. ~40 hrs/week manual data entry burden.",
+        "agtech":        "Grain merchandising system — fully siloed. No integration with Personify or FINYS. Grain customers cannot be identified as Farm Bureau members. ~40 hrs/week manual data entry burden.",
         "excel":         "Shadow spreadsheets maintained across multiple teams: demographics filtering, agent prospect pipelines, Etix reconciliation exports. Prevalent across every interview group.",
     }
 
     A1_EDGE_ICONS = {"working": "✅", "degraded": "⚠️", "broken": "❌", "manual": "🔧"}
 
-    # ── Session state ─────────────────────────────────────────────────────
     if "act1_selected" not in st.session_state:
         st.session_state.act1_selected = None
     act1_sel = st.session_state.act1_selected
 
-    # Build lookup dicts
     NODE_BOX  = {n[0]: n for n in ACT1_NODES}
     NODE_LABEL = {n[0]: n[1] for n in ACT1_NODES}
 
@@ -1009,10 +998,8 @@ with tab3:
 
     a1_related = a1_connected(act1_sel) if act1_sel else set()
 
-    # ── Build figure ──────────────────────────────────────────────────────
     shapes_a1, annots_a1, traces_a1 = [], [], []
 
-    # Tier label annotations
     for y_tier, lbl_tier in [(8.5, "Entry channels"), (5.5, "Core systems"), (2.5, "Supporting systems")]:
         annots_a1.append(dict(
             x=-0.1, y=y_tier + 0.55, text=lbl_tier, showarrow=False,
@@ -1020,7 +1007,6 @@ with tab3:
             font=dict(size=11, color="#9ca3af"),
         ))
 
-    # Tier separator lines
     for y_sep in [4.3, 7.3]:
         shapes_a1.append(dict(
             type="line", x0=-0.1, x1=10.1, y0=y_sep, y1=y_sep,
@@ -1030,7 +1016,6 @@ with tab3:
     import numpy as np
 
     def bezier_curve(p0, p1, p2, p3, n=40):
-        """Cubic Bézier from p0 to p3 with control points p1, p2."""
         t = np.linspace(0, 1, n)
         x = ((1-t)**3 * p0[0] + 3*(1-t)**2*t * p1[0] +
              3*(1-t)*t**2 * p2[0] + t**3 * p3[0])
@@ -1038,8 +1023,6 @@ with tab3:
              3*(1-t)*t**2 * p2[1] + t**3 * p3[1])
         return list(x) + [None], list(y) + [None]
 
-    # Per-edge unique lateral offsets so parallel edges fan out
-    # Pre-count how many edges share each node-pair
     pair_counter = {}
     for src, tgt, lbl, etype in ACT1_EDGES:
         pk = (min(src, tgt), max(src, tgt))
@@ -1067,7 +1050,6 @@ with tab3:
         idx = pair_idx.get(pk, 0)
         pair_idx[pk] = idx + 1
 
-        # Fan offset: spread parallel edges symmetrically around centre
         if n_parallel > 1:
             fan = (idx - (n_parallel - 1) / 2) * 0.22
         else:
@@ -1076,22 +1058,18 @@ with tab3:
         same_tier = abs(sy - ty) < 1.0
 
         if same_tier:
-            # Same-tier: cubic Bézier arcing downward between the tiers
-            # Exit bottom of source, enter bottom of target, control points dip down
             if sy >= 5.0:
-                dip = 3.8 - idx * 0.35   # between core and supporting
+                dip = 3.8 - idx * 0.35
             else:
-                dip = 1.5 - idx * 0.25   # below supporting row
+                dip = 1.5 - idx * 0.25
 
             p0 = (sx + fan, sy - sh / 2)
             p3 = (tx + fan, ty - th / 2)
             p1 = (sx + fan, dip)
             p2 = (tx + fan, dip)
-            cx_arr, cy_arr = sx + fan, dip + 0.05  # near target for arrowhead direction
+            cx_arr, cy_arr = sx + fan, dip + 0.05
 
         else:
-            # Cross-tier: cubic Bézier, exit bottom of source, enter top of target
-            # Control points extend vertically from each endpoint — gives S-curve
             p0 = (sx + fan, sy - sh / 2)
             p3 = (tx + fan, ty + th / 2)
             dy = abs(sy - ty)
@@ -1114,18 +1092,13 @@ with tab3:
             showlegend=False,
         ))
 
-        # Arrowhead: use pixel-offset tangent from the last two curve points
-        # path_x[-2]/path_y[-2] = last real point (= p3)
-        # path_x[-3]/path_y[-3] = second-to-last real point
-        ex, ey = path_x[-2], path_y[-2]   # arrowhead tip (= p3)
-        bx, by = path_x[-3], path_y[-3]   # point just before tip
+        ex, ey = path_x[-2], path_y[-2]
+        bx, by = path_x[-3], path_y[-3]
 
-        # dx/dy gives the incoming direction; scale to a fixed pixel length
         import math
         ddx = ex - bx
         ddy = ey - by
         dlen = math.sqrt(ddx**2 + ddy**2) or 1
-        # ax/ay are pixel offsets FROM the tip BACK along the tangent (20px)
         px_ax = -(ddx / dlen) * 20
         px_ay = -(ddy / dlen) * 20
 
@@ -1143,7 +1116,6 @@ with tab3:
             text="",
         ))
 
-    # Legend traces
     for etype, es in A1_EDGE_STYLE.items():
         traces_a1.append(go.Scatter(
             x=[None], y=[None], mode="lines",
@@ -1151,7 +1123,6 @@ with tab3:
             name=es["label"], showlegend=True,
         ))
 
-    # Node boxes
     for nid, label, sub, cx, cy, w, h, fill, line_col, text_col in ACT1_NODES:
         x0, x1 = cx - w / 2, cx + w / 2
         y0, y1 = cy - h / 2, cy + h / 2
@@ -1196,7 +1167,6 @@ with tab3:
             font=dict(size=10, color=line_col if node_opacity == 1.0 else "#ccc"),
         ))
 
-        # Invisible scatter for click
         traces_a1.append(go.Scatter(
             x=[cx], y=[cy],
             mode="markers",
@@ -1223,7 +1193,6 @@ with tab3:
         clickmode="event",
     )
 
-    # ── Render + capture click ────────────────────────────────────────────
     event_a1 = st.plotly_chart(fig_a1, use_container_width=True, on_select="rerun", key="act1_flow_chart")
 
     if event_a1 and event_a1.get("selection") and event_a1["selection"].get("points"):
@@ -1241,7 +1210,6 @@ with tab3:
     else:
         st.caption("Click any node to highlight its connections")
 
-    # ── Detail panel ──────────────────────────────────────────────────────
     st.divider()
     st.markdown("#### Node detail")
 
