@@ -331,8 +331,9 @@ with tab1:
         "netsuite":         (3.0, -0.2),
         # Core — col 3 (x=5.8)
         "hubspot":          (5.8,  1.5),
-        "ods":              (5.8, -0.2),
-        "imageright":       (5.8, -1.9),
+        "imageright":       (5.8, -0.2),
+        # ODS — center bottom, receives from all
+        "ods":              (3.0, -1.9),
         # External / vendor — left sub-col (x=9.2): data providers + brokerage
         "lexisnexis":       (9.2,  1.5),
         "nexsure":          (9.2,  0.2),
@@ -343,24 +344,26 @@ with tab1:
         "first_call":       (11.2, -1.1),
         "himarly":          (11.2, -2.4),
     }
+    # Core nodes — green
+    _core_style    = {"fill": "#F0FDF4", "line": "#16A34A", "text": "#14532D"}
+    # External/vendor nodes — orange
+    _vendor_style  = {"fill": "#FFF7ED", "line": "#C2410C", "text": "#7C2D12"}
+
     NODE_STYLE = {
-        "personify":        {"fill": "#E1F5EE", "line": "#0F6E56", "text": "#085041"},
-        "finys":            {"fill": "#FAECE7", "line": "#993C1D", "text": "#712B13"},
-        "countryway":       {"fill": "#F1EFE8", "line": "#5F5E5A", "text": "#2C2C2A"},
-        "hubspot":          {"fill": "#FAEEDA", "line": "#854F0B", "text": "#633806"},
-        "ods":              {"fill": "#EEEDFE", "line": "#534AB7", "text": "#3C3489"},
-        "netsuite":         {"fill": "#E6F1FB", "line": "#185FA5", "text": "#0C447C"},
-        "imageright":       {"fill": "#FAECE7", "line": "#993C1D", "text": "#712B13"},
-        # Brokerage — coral
-        "nexsure":          {"fill": "#FAECE7", "line": "#D85A30", "text": "#993C1D"},
-        "applied_rater":    {"fill": "#FAECE7", "line": "#D85A30", "text": "#993C1D"},
-        "carrier_portals":  {"fill": "#FAECE7", "line": "#D85A30", "text": "#993C1D"},
-        # Claims vendors — purple
-        "claimant_locator": {"fill": "#EEEDFE", "line": "#7F77DD", "text": "#3C3489"},
-        "himarly":          {"fill": "#EEEDFE", "line": "#7F77DD", "text": "#3C3489"},
-        "first_call":       {"fill": "#EEEDFE", "line": "#7F77DD", "text": "#3C3489"},
-        # External data providers — green
-        "lexisnexis":       {"fill": "#F0FDF4", "line": "#166534", "text": "#14532D"},
+        "personify":        _core_style,
+        "finys":            _core_style,
+        "countryway":       _core_style,
+        "hubspot":          _core_style,
+        "ods":              _core_style,
+        "netsuite":         _core_style,
+        "imageright":       _core_style,
+        "nexsure":          _vendor_style,
+        "applied_rater":    _vendor_style,
+        "carrier_portals":  _vendor_style,
+        "claimant_locator": _vendor_style,
+        "himarly":          _vendor_style,
+        "first_call":       _vendor_style,
+        "lexisnexis":       _vendor_style,
     }
     NODE_SUBTITLE = {
         "personify":        "Member · relationship",
@@ -465,7 +468,7 @@ with tab1:
     # Region outlines
     for label, x0, x1 in [("VAFB core", -0.1, 8.6), ("External / vendor", 8.7, 13.2)]:
         shapes.append(dict(
-            type="rect", x0=x0, y0=-4.2, x1=x1, y1=2.6,
+            type="rect", x0=x0, y0=-4.6, x1=x1, y1=2.6,
             fillcolor="rgba(0,0,0,0)",
             line=dict(color="#e0e0e0", width=1, dash="dot"),
             layer="below",
@@ -508,13 +511,46 @@ with tab1:
         font=dict(size=9, color="#0C4A6E"),
     ))
 
+    # Healthcare — static isolated box inside VAFB core, below core nodes
+    shapes.append(dict(
+        type="rect", x0=0.1, y0=-4.3, x1=8.5, y1=-2.8,
+        fillcolor="rgba(3, 105, 161, 0.05)",
+        line=dict(color="#0369A1", width=1.5, dash="dot"),
+        layer="below",
+    ))
+    annotations.append(dict(
+        x=4.3, y=-2.85,
+        text="<b>Healthcare & Benefits Administration</b> · broken · isolated (HIPAA / cost constraints)",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=10, color="#0369A1"),
+    ))
+    annotations.append(dict(
+        x=4.3, y=-3.25,
+        text="Salesforce · ImageWrite · Benefit Design Group · EBCA · Carrier Portals",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=9, color="#0C4A6E"),
+    ))
+    annotations.append(dict(
+        x=4.3, y=-3.65,
+        text="No connection to Personify or Finys · member verification manual · 80k individuals in homegrown Blue Book system",
+        showarrow=False, xanchor="center", yanchor="top",
+        font=dict(size=8, color="#0C4A6E"),
+    ))
+
     # Count how many teams depend on each system
     _team_counts = {}
     for _team, _deps, _hc in TEAM_SYSTEM_DEPS:
         for _sid in _deps:
             _team_counts[_sid] = _team_counts.get(_sid, 0) + 1
 
+    EXTERNAL_NODES = {
+        "lexisnexis", "nexsure", "applied_rater", "carrier_portals",
+        "claimant_locator", "first_call", "himarly",
+    }
+
     def _node_dims(nid):
+        if nid in EXTERNAL_NODES:
+            return 1.6, 0.55
         count = _team_counts.get(nid, 0)
         if count <= 1:
             return 1.6, 0.55
@@ -707,7 +743,7 @@ with tab1:
         height=720,
         margin=dict(l=10, r=10, t=20, b=30),
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.3, 13.4]),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-4.4, 2.8]),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-4.8, 2.8]),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="left", x=0),
